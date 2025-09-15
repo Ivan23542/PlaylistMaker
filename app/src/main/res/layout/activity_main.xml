@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
-    android:background="@color/golyboi"
-    android:padding="16dp">
+    style="@style/main"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <TextView
+        android:textFontWeight="500"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
+        android:fontFamily="@font/ys_display_medium"
         android:text="@string/heading"
         android:textColor="@color/white"
         android:textSize="22sp"/>
@@ -22,62 +19,25 @@
         android:layout_height="match_parent"
         android:layout_marginTop="16dp"
         android:orientation="vertical">
-
-
-
-
         <Button
+            style="@style/ButtonMain"
             android:id="@+id/poisk"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cornerRadius="16dp"
-            android:layout_weight="1"
-            android:backgroundTint="@color/white"
-            android:textSize="22sp"
             android:text="@string/button_1"
-            android:textAllCaps="false"
-            android:textColor="@color/black"
-            app:icon="@drawable/lupa"
-            app:iconGravity="textStart"
-            app:iconTint="@color/black"
-            />
+            app:icon="@drawable/lupa"/>
 
         <Button
+            style="@style/ButtonMain"
             android:id="@+id/mediateka"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cornerRadius="16dp"
-            android:layout_weight="1"
-            android:backgroundTint="@color/white"
-            android:textSize="22sp"
             android:text="@string/button_2"
-            android:textAllCaps="false"
-            android:textColor="@color/black"
-            app:icon="@drawable/mediateka"
-            app:iconGravity="textStart"
-            app:iconTint="@color/black"
-            />
-        <Button
-            android:id="@+id/nastroiki"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cornerRadius="16dp"
-            android:layout_weight="1"
-            android:backgroundTint="@color/white"
-            android:textSize="22sp"
-            android:text="@string/button_3"
-            android:textAllCaps="false"
-            android:textColor="@color/black"
-            app:icon="@drawable/nastroiki"
-            app:iconGravity="textStart"
-            app:iconTint="@color/black"
-            />
+            app:icon="@drawable/mediateka"/>
 
+        <Button
+            style="@style/ButtonMain"
+            android:id="@+id/nastroiki"
+            android:text="@string/button_3"
+            app:icon="@drawable/nastroiki"/>
 
     </LinearLayout>
-
-
-
 
 </LinearLayout>
 

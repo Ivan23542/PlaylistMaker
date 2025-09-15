@@ -1,64 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
+    style="@style/settings"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    android:background="@color/white">
 
  <LinearLayout
      android:layout_width="match_parent"
      android:layout_height="wrap_content">
     <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        android:backgroundTint="@color/white"
-        android:layout_margin="4dp"
-
-        android:padding="16dp"
+        android:id="@+id/back"
+        style="@style/ImageButtonSetting"
         android:src="@drawable/strelka">
-
-
     </ImageButton>
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="@string/button_3"
-        android:textStyle="bold"
-        android:textColor="@color/black"
-        android:paddingStart="12dp"
-        android:paddingTop="9dp"
-        android:paddingBottom="9dp"
-        android:textSize="22sp">
-
+        style="@style/textnastroiki"
+        android:text="@string/button_3">
     </TextView>
 
 </LinearLayout>
 
-
-
-
-<LinearLayout
+    <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal">
 
     <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="@string/tema"
-        android:textColor="@color/black"
-        android:textSize="16sp"
-        android:paddingStart="16dp"
-        android:paddingVertical="21dp"
-        android:layout_marginTop="24dp">
-
+        style="@style/ButtonSettings1"
+        android:text="@string/tema">
 
     </TextView>
 
@@ -71,49 +41,25 @@
         android:paddingEnd="9dp"
         android:layout_marginEnd="6dp">
 
-
-
-
     </Switch>
 
 
-
-
-
-
-
-
-
-</LinearLayout>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
     <TextView
-        android:layout_width="0dp"
-        android:layout_weight="1"
-        android:layout_height="wrap_content"
         android:text="@string/Share_the_app"
-        android:textColor="@color/black"
-        android:textSize="16sp"
-        android:paddingStart="16dp"
-        android:paddingVertical="21dp">
+        style="@style/TextViewSettings">
 
     </TextView>
 
 
         <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:src="@drawable/share"
-            android:background="@color/white"
-
-            android:layout_marginEnd="12dp"
-            android:paddingVertical="3dp"
-            android:paddingHorizontal="4dp"
-            android:layout_marginTop="19dp"
-            android:layout_marginBottom="18dp">
+            style="@style/ImageButtonSettings">
 
         </ImageButton>
 
@@ -124,69 +70,30 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
         <TextView
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="@string/support"
-            android:textColor="@color/black"
-            android:textSize="16sp"
-            android:paddingStart="16dp"
-            android:paddingVertical="21dp">
+            style="@style/TextViewSettings"
+            android:text="@string/support">
 
         </TextView>
 
-
         <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/support"
-            android:background="@color/white"
+            style="@style/ImageButtonSettings"
+            android:src="@drawable/support">
 
-            android:layout_marginEnd="12dp"
-            android:paddingVertical="3dp"
-            android:paddingHorizontal="3dp"
-            android:layout_marginTop="19dp"
-            android:layout_marginBottom="18dp">
 
         </ImageButton>
 
-
-
-
-
-
-
     </LinearLayout>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
         <TextView
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="@string/Agreement"
-            android:textColor="@color/black"
-            android:textSize="16sp"
-            android:paddingStart="16dp"
-            android:paddingVertical="21dp">
-
+            style="@style/TextViewSettings"
+            android:text="@string/Agreement">
         </TextView>
-
-
         <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/strelka_2"
-            android:background="@color/white"
-
-            android:layout_marginEnd="12dp"
-            android:paddingVertical="3dp"
-            android:paddingHorizontal="3dp"
-            android:layout_marginTop="19dp"
-            android:layout_marginBottom="18dp">
-
+            style="@style/ImageButtonSettings"
+            android:src="@drawable/strelka_2">
         </ImageButton>
     </LinearLayout>
 
