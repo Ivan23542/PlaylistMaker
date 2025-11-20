@@ -25,7 +25,10 @@
 
         <activity
             android:name=".PoiskActivity"
-            android:exported="false"/>
+            android:exported="false"
+            android:windowSoftInputMode="stateHidden|adjustResize"
+            android:supportsPictureInPicture="false"
+             />
         <activity
             android:name=".MediatekaActivity"
             android:exported="false"/>

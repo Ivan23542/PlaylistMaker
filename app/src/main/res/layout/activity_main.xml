@@ -5,13 +5,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <TextView
-        android:textFontWeight="500"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/ys_display_medium"
-        android:text="@string/heading"
-        android:textColor="@color/white"
-        android:textSize="22sp"/>
+        style="@style/NameMain"
+        android:text="@string/heading">
+
+    </TextView>
+
 
     <LinearLayout
         android:layout_width="match_parent"

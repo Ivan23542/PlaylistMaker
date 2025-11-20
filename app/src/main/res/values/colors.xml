@@ -9,7 +9,9 @@
     <color name="teal_200">#FF03DAC5</color>
     <color name="dark_background">#FF121212</color>
     <color name="dark_surface">#FF1E1E1E</color>
-
+    <color name="dark">#AEAFB4</color>
     <color name="gray_light">#FFB3B3B3</color>
     <color name="gray_dark">#FF666666</color>
+    <color name="YP_Light_Gray">#E6E8EB</color>
+    <color name="YP_Text_Gray">#AEAFB4</color>
 </resources>

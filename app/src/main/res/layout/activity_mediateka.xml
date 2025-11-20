@@ -1,12 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".SettingsActivity">
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    tools:context=".MediatekaActivity">
+
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal">
+
+
+      <ImageButton
+          android:id="@+id/strelka_Mediateka"
+          style="@style/ImageButtonSetting"
+          android:src="@drawable/strelka">
+
+      </ImageButton>
 
 
 
-</FrameLayout>
+      <TextView
+        style="@style/textnastroiki"
+        android:text="@string/mediateka"
+        android:layout_marginTop="6dp">
+    </TextView>
+
+
+
+
+
+
+  </LinearLayout>
+
+
+
+
+
+</LinearLayout>
