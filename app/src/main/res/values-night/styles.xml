@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Light theme styles -->
-    <style name="ButtonMain">
+    <style name="ButtonMain" parent="Widget.MaterialComponents.Button.UnelevatedButton">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="cornerRadius">16dp</item>
@@ -137,5 +137,16 @@
         <item name="android:cursorVisible">true</item>
         <item name="android:singleLine">true</item>
         <item name="android:imeOptions">actionSearch</item>
+    </style>
+
+    <style name="crest">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">370dp</item>
+        <item name="android:layout_marginVertical">10dp</item>
+        <item name="android:layout_marginHorizontal">12dp</item>
+        <item name="android:backgroundTint">@color/black</item>
+
+
     </style>
 </resources>

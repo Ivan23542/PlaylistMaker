@@ -16,7 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 class PoiskActivity : AppCompatActivity() {
 
     private lateinit var searchEditText: EditText
-    private lateinit var clearButton: TextView
+    private lateinit var clearButton: ImageView
     private lateinit var searchIcon: ImageView
     private lateinit var searchFieldContainer: View
 
@@ -55,7 +55,7 @@ class PoiskActivity : AppCompatActivity() {
 
     private fun setupViews() {
         searchEditText = findViewById(R.id.search_edit_text)
-        clearButton = findViewById(R.id.clear_button)
+        clearButton = findViewById(R.id.crest)
         searchIcon = findViewById(R.id.search_icon)
         searchFieldContainer = findViewById(R.id.search_field_container)
     }
@@ -63,7 +63,6 @@ class PoiskActivity : AppCompatActivity() {
     private fun setupBackButton() {
         val backButton = findViewById<ImageButton>(R.id.backButton)
         backButton.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
     }
@@ -115,13 +114,12 @@ class PoiskActivity : AppCompatActivity() {
     }
 
     private fun updateClearButtonVisibility(text: String) {
-        if (text.isEmpty()) {
-            clearButton.visibility = View.GONE
-            searchIcon.visibility = View.VISIBLE
+        clearButton.visibility = if (text.isEmpty()) {
+            View.GONE
         } else {
-            clearButton.visibility = View.VISIBLE
-            searchIcon.visibility = View.GONE
+            View.VISIBLE
         }
+
     }
 
     private fun focusAndShowKeyboard() {

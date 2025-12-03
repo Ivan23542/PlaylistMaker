@@ -18,8 +18,7 @@ class MediatekaActivity : AppCompatActivity() {
 
     private fun setup_BackButton(){
         val backButton = findViewById<ImageButton>(R.id.strelka_Mediateka)
-        backButton.setOnClickListener(){
-            startActivity(Intent(this, MainActivity::class.java))
+        backButton.setOnClickListener {
             finish()
         }
     }

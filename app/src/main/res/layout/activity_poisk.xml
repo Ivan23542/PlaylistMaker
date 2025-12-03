@@ -61,13 +61,12 @@
 
         </ImageView>
 
-        <TextView
-            android:id="@+id/clear_button"
-            style="@style/clear"
-            android:text="×">
+        <ImageView
+            android:id="@+id/crest"
+            style="@style/crest"
+            android:background="@drawable/crest">
 
-        </TextView>
-
+        </ImageView>
 
 
     </FrameLayout>
