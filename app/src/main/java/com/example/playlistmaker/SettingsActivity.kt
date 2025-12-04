@@ -22,14 +22,12 @@ class SettingsActivity : AppCompatActivity() {
         setupAgreementButton()
     }
 
-        private fun setupBackButton() {
-            val backButton = findViewById<ImageButton>(R.id.back)
-            backButton.setOnClickListener {
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
+    private fun setupBackButton() {
+        val backButton = findViewById<ImageButton>(R.id.back)
+        backButton.setOnClickListener {
+            finish()
         }
+    }
 
 
 

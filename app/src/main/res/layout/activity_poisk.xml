@@ -62,9 +62,11 @@
         </ImageView>
 
         <ImageView
+            android:scaleType="centerCrop"
+            android:layout_gravity="right|center_vertical"
             android:id="@+id/crest"
             style="@style/crest"
-            android:background="@drawable/crest">
+            android:src="@drawable/crest">
 
         </ImageView>
 
