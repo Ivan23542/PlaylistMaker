@@ -1,42 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
 
-    style="@style/main"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-
-    <TextView
-        style="@style/NameMain"
-        android:text="@string/heading">
-
-    </TextView>
-
+    android:id="@+id/rootView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/golyboi"
+    android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/contentContainer"
         android:layout_width="match_parent"
-
         android:layout_height="match_parent"
-        android:layout_marginTop="16dp"
-        android:orientation="vertical">
-        <Button
-            style="@style/ButtonMain"
-            android:id="@+id/poisk"
-            android:text="@string/button_1"
-            app:icon="@drawable/lupa"/>
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <Button
-            style="@style/ButtonMain"
-            android:id="@+id/mediateka"
-            android:text="@string/button_2"
-            app:icon="@drawable/mediateka"/>
+        <TextView
+            style="@style/NameMain"
+            android:text="@string/heading" />
 
-        <Button
-            style="@style/ButtonMain"
-            android:id="@+id/nastroiki"
-            android:text="@string/button_3"
-            app:icon="@drawable/nastroiki"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/poisk"
+                style="@style/ButtonMain"
+                android:text="@string/button_1"
+                app:icon="@drawable/lupa" />
+
+            <Button
+                android:id="@+id/mediateka"
+                style="@style/ButtonMain"
+                android:text="@string/button_2"
+                app:icon="@drawable/mediateka" />
+
+            <Button
+                android:id="@+id/nastroiki"
+                style="@style/ButtonMain"
+                android:text="@string/button_3"
+                app:icon="@drawable/nastroiki" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
 </LinearLayout>
-
-

@@ -10,6 +10,9 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
@@ -61,6 +64,16 @@ class PoiskActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_poisk)
+
+        val rootView = findViewById<View>(R.id.rootView)
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updatePadding(
+                top = systemBars.top,
+                bottom = systemBars.bottom
+            )
+            insets
+        }
 
         setupViews()
         setupBackButton()
@@ -166,11 +179,8 @@ class PoiskActivity : AppCompatActivity() {
                     it.artistName.contains(text, ignoreCase = true)
         }
 
-        if (filteredTracks.isEmpty()) {
-            tracksRecyclerView.visibility = View.GONE
-        } else {
-            tracksRecyclerView.visibility = View.VISIBLE
-        }
+        tracksRecyclerView.visibility =
+            if (filteredTracks.isEmpty()) View.GONE else View.VISIBLE
 
         trackAdapter.updateTracks(filteredTracks)
     }

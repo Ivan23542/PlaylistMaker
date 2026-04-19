@@ -1,40 +1,51 @@
 package com.example.playlistmaker
-//d
+
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState) // ← ДОБАВЛЕНО: вызов super.onCreate
-        enableEdgeToEdge() // ← ДОБАВЛЕНО: если используете edge-to-edge
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
+        val contentContainer = findViewById<View>(R.id.contentContainer)
+
+        val startPadding = contentContainer.paddingStart
+        val topPadding = contentContainer.paddingTop
+        val endPadding = contentContainer.paddingEnd
+        val bottomPadding = contentContainer.paddingBottom
+
+        ViewCompat.setOnApplyWindowInsetsListener(contentContainer) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(
+                startPadding,
+                topPadding + systemBars.top,
+                endPadding,
+                bottomPadding + systemBars.bottom
+            )
+            insets
+        }
+
         val button = findViewById<Button>(R.id.poisk)
-
-        val clickListener = View.OnClickListener { v ->
-            val intent = Intent(this, PoiskActivity::class.java)
-            startActivity(intent)
+        button.setOnClickListener {
+            startActivity(Intent(this, PoiskActivity::class.java))
         }
 
-        button.setOnClickListener(clickListener)
-
-        val button_2 = findViewById<Button>(R.id.mediateka)
-
-        button_2.setOnClickListener{
-            val intent = Intent(this, MediatekaActivity::class.java)
-            startActivity(intent)
+        val button2 = findViewById<Button>(R.id.mediateka)
+        button2.setOnClickListener {
+            startActivity(Intent(this, MediatekaActivity::class.java))
         }
 
-        val button_3 = findViewById<Button>(R.id.nastroiki)
-
-        button_3.setOnClickListener{
-            val intent = Intent(this, SettingsActivity::class.java)
-            startActivity(intent)
+        val button3 = findViewById<Button>(R.id.nastroiki)
+        button3.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
     }
 }
