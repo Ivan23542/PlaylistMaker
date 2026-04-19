@@ -1,37 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".SettingsActivity">
+
     <View
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:focusable="true"
         android:focusableInTouchMode="true" />
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal">
-    <ImageButton
-        android:id="@+id/backButton"
-        style="@style/ImageButtonSetting"
-        android:src="@drawable/strelka">
-    </ImageButton>
 
-    <TextView
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
-        style="@style/textnastroiki"
-        android:layout_marginTop="6dp"
-        android:text="@string/search">
+        <ImageButton
+            android:id="@+id/backButton"
+            style="@style/ImageButtonSetting"
+            android:src="@drawable/strelka" />
 
-    </TextView>
+        <TextView
+            style="@style/textnastroiki"
+            android:layout_marginTop="6dp"
+            android:text="@string/search" />
 
-</LinearLayout>
+    </LinearLayout>
 
     <FrameLayout
         android:id="@+id/search_field_container"
@@ -45,39 +43,33 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/search_field"
-            app:backgroundTint="@color/YP_Light_Gray"/>
+            app:backgroundTint="@color/YP_Light_Gray" />
 
         <EditText
-            style="@style/EditText"
-            android:id="@+id/search_edit_text">
-
-        </EditText>
-
+            android:id="@+id/search_edit_text"
+            style="@style/EditText" />
 
         <ImageView
             android:id="@+id/search_icon"
             style="@style/search"
-            android:src="@drawable/lupa_poisk">
-
-        </ImageView>
+            android:src="@drawable/lupa_poisk" />
 
         <ImageView
-            android:scaleType="centerCrop"
-            android:layout_gravity="right|center_vertical"
             android:id="@+id/crest"
             style="@style/crest"
-            android:src="@drawable/crest">
-
-        </ImageView>
-
+            android:layout_gravity="right|center_vertical"
+            android:scaleType="centerCrop"
+            android:src="@drawable/crest" />
 
     </FrameLayout>
 
 
-
-
-
-
-
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/tracksRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        tools:listitem="@layout/item_track" />
 
 </LinearLayout>

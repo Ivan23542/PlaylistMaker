@@ -14,4 +14,6 @@
     <color name="gray_dark">#FF666666</color>
     <color name="YP_Light_Gray">#E6E8EB</color>
     <color name="YP_Text_Gray">#AEAFB4</color>
+    <color name="gray">#AEAFB4</color>
+
 </resources>

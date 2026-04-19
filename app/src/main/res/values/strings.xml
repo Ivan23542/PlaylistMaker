@@ -17,4 +17,5 @@
     <string name="search">Поиск</string>
     <string name="search_poisk">Поиск</string>
     <string name="mediateka">Медиатека</string>
+    <string name="track_cover">Обложка трека</string>
 </resources>
