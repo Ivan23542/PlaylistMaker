@@ -2,4 +2,6 @@
 <resources>
     <color name="track_name_color">#FFFFFF</color>
     <color name="track_secondary_color">#AEAFB4</color>
+    <color name="main_background">#1A1B22</color>
+    <color name="screen_background">#1A1B22</color>
 </resources>
