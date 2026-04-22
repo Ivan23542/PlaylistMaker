@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    android:id="@+id/rootView"
+    android:background="@color/screen_background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".PoiskActivity">
+
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/backButton"
+            style="@style/ImageButtonSetting"
+            android:src="@drawable/strelka" />
+
+        <TextView
+            style="@style/textnastroiki"
+            android:layout_marginTop="6dp"
+            android:text="@string/search" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/search_field_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/search_field"
+            app:backgroundTint="@color/YP_Light_Gray" />
+
+        <EditText
+            android:id="@+id/search_edit_text"
+            style="@style/EditText" />
+
+        <ImageView
+            android:id="@+id/search_icon"
+            style="@style/search"
+            android:src="@drawable/lupa_poisk" />
+
+        <ImageView
+            android:id="@+id/crest"
+            style="@style/crest"
+            android:layout_gravity="right|center_vertical"
+            android:scaleType="centerCrop"
+            android:src="@drawable/crest" />
+    </FrameLayout>
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/tracksRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        tools:listitem="@layout/item_track" />
+
+
+    <LinearLayout
+        android:id="@+id/placeholderContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/placeholderImage"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            tools:src="@drawable/nothing_found" />
+
+        <TextView
+            android:id="@+id/placeholderText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:textSize="19sp"
+            android:textColor="@color/track_name_color"
+            tools:text="Ничего не нашлось" />
+
+        <TextView
+            android:id="@+id/placeholderSubtext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="19sp"
+            android:textAlignment="center"
+            android:textColor="@color/track_name_color"
+            android:visibility="gone"
+            tools:text="Загрузка не удалась. Проверьте подключение к интернету" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/retryButton"
+            style="@style/RetryButton"
+            android:layout_marginTop="16dp"
+            android:text="@string/refresh"
+            android:backgroundTint="@null"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</LinearLayout>
