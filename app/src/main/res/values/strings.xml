@@ -18,4 +18,8 @@
     <string name="search_poisk">Поиск</string>
     <string name="mediateka">Медиатека</string>
     <string name="track_cover">Обложка трека</string>
+    <string name="nothing_found">Ничего не нашлось</string>
+    <string name="connection_error">Проблемы со связью</string>
+    <string name="connection_error_message">Загрузка не удалась. Проверьте подключение к интернету</string>
+    <string name="refresh">Обновить</string>
 </resources>
