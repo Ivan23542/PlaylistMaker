@@ -1,5 +1,6 @@
 package com.example.playlistmaker
 
+import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -29,8 +30,15 @@ class PoiskActivity : AppCompatActivity() {
     private lateinit var clearButton: ImageView
     private lateinit var searchIcon: ImageView
     private lateinit var searchFieldContainer: View
+
     private lateinit var tracksRecyclerView: RecyclerView
     private lateinit var trackAdapter: TrackAdapter
+
+    private lateinit var historyContainer: View
+    private lateinit var historyRecyclerView: RecyclerView
+    private lateinit var clearHistoryButton: Button
+    private lateinit var historyAdapter: TrackAdapter
+    private lateinit var searchHistory: SearchHistory
 
     private lateinit var placeholderContainer: View
     private lateinit var placeholderImage: ImageView
@@ -58,14 +66,22 @@ class PoiskActivity : AppCompatActivity() {
 
         setupViews()
         setupBackButton()
-        setupRecyclerView()
+        setupRecyclerViews()
         setupSearchLogic()
         setupRetryButton()
+        setupClearHistoryButton()
 
         if (savedInstanceState != null) {
             searchText = savedInstanceState.getString(SEARCH_TEXT_KEY, "")
             searchEditText.setText(searchText)
             updateClearButtonVisibility(searchText)
+
+            if (searchText.isNotBlank()) {
+                performSearch(searchText)
+            } else {
+                hideAllStates()
+                showHistory()
+            }
         } else {
             hideAllStates()
         }
@@ -81,13 +97,22 @@ class PoiskActivity : AppCompatActivity() {
         clearButton = findViewById(R.id.crest)
         searchIcon = findViewById(R.id.search_icon)
         searchFieldContainer = findViewById(R.id.search_field_container)
+
         tracksRecyclerView = findViewById(R.id.tracksRecyclerView)
+
+        historyContainer = findViewById(R.id.historyContainer)
+        historyRecyclerView = findViewById(R.id.historyRecyclerView)
+        clearHistoryButton = findViewById(R.id.clearHistoryButton)
 
         placeholderContainer = findViewById(R.id.placeholderContainer)
         placeholderImage = findViewById(R.id.placeholderImage)
         placeholderText = findViewById(R.id.placeholderText)
         placeholderSubtext = findViewById(R.id.placeholderSubtext)
         retryButton = findViewById(R.id.retryButton)
+
+        searchHistory = SearchHistory(
+            getSharedPreferences("playlist_maker_prefs", Context.MODE_PRIVATE)
+        )
     }
 
     private fun setupBackButton() {
@@ -97,11 +122,24 @@ class PoiskActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupRecyclerView() {
-        trackAdapter = TrackAdapter(emptyList())
+    private fun setupRecyclerViews() {
+        trackAdapter = TrackAdapter(emptyList()) { track ->
+            searchHistory.add(track)
+            showHistory()
+        }
+
+        historyAdapter = TrackAdapter(emptyList()) { track ->
+            searchHistory.add(track)
+            showHistory()
+        }
+
         tracksRecyclerView.layoutManager = LinearLayoutManager(this)
         tracksRecyclerView.adapter = trackAdapter
         tracksRecyclerView.visibility = View.GONE
+
+        historyRecyclerView.layoutManager = LinearLayoutManager(this)
+        historyRecyclerView.adapter = historyAdapter
+        historyContainer.visibility = View.GONE
     }
 
     private fun setupSearchLogic() {
@@ -117,6 +155,9 @@ class PoiskActivity : AppCompatActivity() {
 
                 if (currentText.isBlank()) {
                     hideAllStates()
+                    showHistory()
+                } else {
+                    historyContainer.visibility = View.GONE
                 }
             }
 
@@ -150,6 +191,9 @@ class PoiskActivity : AppCompatActivity() {
         searchEditText.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 showKeyboard()
+                showHistory()
+            } else {
+                historyContainer.visibility = View.GONE
             }
         }
 
@@ -171,8 +215,17 @@ class PoiskActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupClearHistoryButton() {
+        clearHistoryButton.setOnClickListener {
+            searchHistory.clear()
+            historyAdapter.updateTracks(emptyList())
+            historyContainer.visibility = View.GONE
+        }
+    }
+
     private fun performSearch(query: String) {
         lastSearchQuery = query
+        historyContainer.visibility = View.GONE
 
         NetworkClient.iTunesApi.search(query).enqueue(object : Callback<SearchResponse> {
             override fun onResponse(call: Call<SearchResponse>, response: Response<SearchResponse>) {
@@ -181,12 +234,9 @@ class PoiskActivity : AppCompatActivity() {
                     return
                 }
 
-                val searchResponse = response.body()
-                val foundTracks = searchResponse?.results
+                val foundTracks = response.body()?.results
                     ?.map { TrackMapper.map(it) }
-                    ?.filter {
-                        it.trackName.isNotBlank() || it.artistName.isNotBlank()
-                    }
+                    ?.filter { it.trackName.isNotBlank() || it.artistName.isNotBlank() }
                     ?: emptyList()
 
                 if (foundTracks.isEmpty()) {
@@ -203,12 +253,27 @@ class PoiskActivity : AppCompatActivity() {
     }
 
     private fun showTracks(tracks: List<Track>) {
+        historyContainer.visibility = View.GONE
         placeholderContainer.visibility = View.GONE
         tracksRecyclerView.visibility = View.VISIBLE
         trackAdapter.updateTracks(tracks)
     }
 
+    private fun showHistory() {
+        val historyTracks = searchHistory.read()
+
+        if (searchEditText.text.isEmpty() && searchEditText.hasFocus() && historyTracks.isNotEmpty()) {
+            tracksRecyclerView.visibility = View.GONE
+            placeholderContainer.visibility = View.GONE
+            historyContainer.visibility = View.VISIBLE
+            historyAdapter.updateTracks(historyTracks)
+        } else {
+            historyContainer.visibility = View.GONE
+        }
+    }
+
     private fun showNothingFound() {
+        historyContainer.visibility = View.GONE
         tracksRecyclerView.visibility = View.GONE
         placeholderContainer.visibility = View.VISIBLE
 
@@ -222,6 +287,7 @@ class PoiskActivity : AppCompatActivity() {
     }
 
     private fun showConnectionError() {
+        historyContainer.visibility = View.GONE
         tracksRecyclerView.visibility = View.GONE
         placeholderContainer.visibility = View.VISIBLE
 
@@ -238,6 +304,7 @@ class PoiskActivity : AppCompatActivity() {
     private fun hideAllStates() {
         tracksRecyclerView.visibility = View.GONE
         placeholderContainer.visibility = View.GONE
+        historyContainer.visibility = View.GONE
         placeholderSubtext.visibility = View.GONE
         retryButton.visibility = View.GONE
         trackAdapter.updateTracks(emptyList())

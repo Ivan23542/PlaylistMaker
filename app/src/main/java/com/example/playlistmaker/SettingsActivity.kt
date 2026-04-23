@@ -1,13 +1,16 @@
 package com.example.playlistmaker
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
+import android.widget.Switch
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -29,6 +32,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         setupBackButton()
+        setupThemeSwitcher()
         setupShareButton()
         setupSupportButton()
         setupAgreementButton()
@@ -38,6 +42,25 @@ class SettingsActivity : AppCompatActivity() {
         val backButton = findViewById<ImageButton>(R.id.back)
         backButton.setOnClickListener {
             finish()
+        }
+    }
+
+    private fun setupThemeSwitcher() {
+        val themeSwitcher = findViewById<Switch>(R.id.themeSwitcher)
+        val prefs = getSharedPreferences(App.PREFS_NAME, Context.MODE_PRIVATE)
+
+        themeSwitcher.isChecked = prefs.getBoolean(App.DARK_THEME_KEY, false)
+
+        themeSwitcher.setOnCheckedChangeListener { _, checked ->
+            prefs.edit().putBoolean(App.DARK_THEME_KEY, checked).apply()
+
+            AppCompatDelegate.setDefaultNightMode(
+                if (checked) {
+                    AppCompatDelegate.MODE_NIGHT_YES
+                } else {
+                    AppCompatDelegate.MODE_NIGHT_NO
+                }
+            )
         }
     }
 
