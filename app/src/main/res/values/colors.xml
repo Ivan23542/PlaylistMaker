@@ -19,6 +19,7 @@
     <color name="track_secondary_color">#AEAFB4</color>
     <color name="screen_background">#FFFFFF</color>
     <color name="retry_button_text_color">#FFFFFF</color>
+    <color name="placeholder_icon_color">#000000</color>
 
 
 </resources>

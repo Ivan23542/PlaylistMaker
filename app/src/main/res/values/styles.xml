@@ -163,6 +163,7 @@
         <item name="android:textAllCaps">false</item>
         <item name="android:background">@drawable/retry_button_bg</item>
         <item name="android:backgroundTint">@null</item>
+        <item name="placeholderIconColor">#1A1B22</item>
     </style>
 
 </resources>
