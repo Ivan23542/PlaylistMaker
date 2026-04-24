@@ -20,6 +20,7 @@
         <!-- Surface colors -->
         <item name="colorSurface">@color/dark_surface</item>
         <item name="colorOnSurface">@color/white</item>
+        <item name="placeholderIconColor">@color/white</item>
     </style>
 
 </resources>
