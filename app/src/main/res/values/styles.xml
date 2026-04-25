@@ -165,5 +165,31 @@
         <item name="android:backgroundTint">@null</item>
         <item name="placeholderIconColor">#1A1B22</item>
     </style>
+    <style name="PlayerInfoTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/track_secondary_color</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="PlayerInfoValue">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/track_name_color</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="PlaylistTextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/text_input_stroke</item>
+        <item name="hintTextColor">@color/text_input_hint</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">1dp</item>
+        <item name="boxCornerRadiusTopStart">8dp</item>
+        <item name="boxCornerRadiusTopEnd">8dp</item>
+        <item name="boxCornerRadiusBottomStart">8dp</item>
+        <item name="boxCornerRadiusBottomEnd">8dp</item>
+    </style>
+
+
 
 </resources>

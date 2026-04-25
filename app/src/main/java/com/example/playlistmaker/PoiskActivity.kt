@@ -1,6 +1,7 @@
 package com.example.playlistmaker
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -116,8 +117,7 @@ class PoiskActivity : AppCompatActivity() {
     }
 
     private fun setupBackButton() {
-        val backButton = findViewById<ImageButton>(R.id.backButton)
-        backButton.setOnClickListener {
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
             finish()
         }
     }
@@ -125,12 +125,12 @@ class PoiskActivity : AppCompatActivity() {
     private fun setupRecyclerViews() {
         trackAdapter = TrackAdapter(emptyList()) { track ->
             searchHistory.add(track)
-            showHistory()
+            openPlayer(track)
         }
 
         historyAdapter = TrackAdapter(emptyList()) { track ->
             searchHistory.add(track)
-            showHistory()
+            openPlayer(track)
         }
 
         tracksRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -252,6 +252,12 @@ class PoiskActivity : AppCompatActivity() {
         })
     }
 
+    private fun openPlayer(track: Track) {
+        val intent = Intent(this, PlayerActivity::class.java)
+        intent.putExtra(TRACK_EXTRA, track)
+        startActivity(intent)
+    }
+
     private fun showTracks(tracks: List<Track>) {
         historyContainer.visibility = View.GONE
         placeholderContainer.visibility = View.GONE
@@ -335,5 +341,6 @@ class PoiskActivity : AppCompatActivity() {
 
     companion object {
         private const val SEARCH_TEXT_KEY = "search_text"
+        const val TRACK_EXTRA = "track_extra"
     }
 }
