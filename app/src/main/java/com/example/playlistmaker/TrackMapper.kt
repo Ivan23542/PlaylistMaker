@@ -11,7 +11,11 @@ object TrackMapper {
             artistName = dto.artistName ?: "",
             trackTime = SimpleDateFormat("mm:ss", Locale.getDefault())
                 .format(dto.trackTimeMillis ?: 0L),
-            artworkUrl100 = dto.artworkUrl100 ?: ""
+            artworkUrl100 = dto.artworkUrl100 ?: "",
+            collectionName = dto.collectionName,
+            releaseDate = dto.releaseDate,
+            primaryGenreName = dto.primaryGenreName,
+            country = dto.country
         )
     }
 }

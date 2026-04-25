@@ -20,6 +20,19 @@
     <color name="screen_background">#FFFFFF</color>
     <color name="retry_button_text_color">#FFFFFF</color>
     <color name="placeholder_icon_color">#000000</color>
-
+    <color name="player_small_button_color">#E6E8EB</color>
+    <color name="player_small_icon_color">#FFFFFF</color>
+    <color name="player_play_button_color">#1A1B22</color>
+    <color name="play_icon_color">#FFFFFF</color>
+    <color name="favorite_red">#F56B6C</color>
+    <color name="create_playlist_button_color">#5A7DF6</color>
+    <color name="create_playlist_button_text">#FFFFFF</color>
+    <color name="blue">#3772E7</color>
+    <color name="button_disabled_color">#5A5A5A</color>
+    <color name="playlist_input_inactive">#AEAFB4</color>
+    <color name="snackbar_bg">#1A1B22</color>
+    <color name="snackbar_text">#FFFFFF</color>
+    <color name="create_button_enabled">#3772E7</color>
+    <color name="create_button_disabled">#AEAFB4</color>
 
 </resources>
