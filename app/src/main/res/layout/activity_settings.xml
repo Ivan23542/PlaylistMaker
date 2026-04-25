@@ -30,6 +30,7 @@
             android:text="@string/tema" />
 
         <Switch
+            android:id="@+id/themeSwitcher"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"

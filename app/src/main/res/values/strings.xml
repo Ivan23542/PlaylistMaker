@@ -18,4 +18,23 @@
     <string name="search_poisk">Поиск</string>
     <string name="mediateka">Медиатека</string>
     <string name="track_cover">Обложка трека</string>
+    <string name="nothing_found">Ничего не нашлось</string>
+    <string name="connection_error">Проблемы со связью</string>
+    <string name="connection_error_message">Загрузка не удалась. Проверьте подключение к интернету</string>
+    <string name="refresh">Обновить</string>
+    <string name="history_title">Вы искали</string>
+    <string name="clear_history">Очистить историю</string>
+    <string name="duration">Длительность</string>
+    <string name="album">Альбом</string>
+    <string name="year">Год</string>
+    <string name="genre">Жанр</string>
+    <string name="country">Страна</string>
+    <string name="play">Воспроизвести</string>
+    <string name="add_to_playlist">Добавить в плейлист</string>
+    <string name="add_to_favorites">Добавить в избранное</string>
+    <string name="player_start_time">0:30</string>
+    <string name="new_playlist">Новый плейлист</string>
+    <string name="playlist_name_required">Название*</string>
+    <string name="playlist_description">Описание</string>
+    <string name="create">Создать</string>
 </resources>
