@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/screen_background"
-    tools:context=".MediatekaActivity">
+    tools:context=".presentation.media.MediatekaActivity">
 
     <LinearLayout
         android:layout_width="match_parent"

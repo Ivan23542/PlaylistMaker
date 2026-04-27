@@ -1,6 +1,5 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.settings
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -14,8 +13,15 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import com.example.playlistmaker.R
+import com.example.playlistmaker.creator.Creator
+import com.example.playlistmaker.domain.interactor.SettingsInteractor
+import com.example.playlistmaker.domain.model.ThemeSettings
 
 class SettingsActivity : AppCompatActivity() {
+
+    private lateinit var settingsInteractor: SettingsInteractor
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -30,6 +36,9 @@ class SettingsActivity : AppCompatActivity() {
             )
             insets
         }
+
+
+        settingsInteractor = Creator.provideSettingsInteractor(this)
 
         setupBackButton()
         setupThemeSwitcher()
@@ -47,12 +56,14 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun setupThemeSwitcher() {
         val themeSwitcher = findViewById<Switch>(R.id.themeSwitcher)
-        val prefs = getSharedPreferences(App.PREFS_NAME, Context.MODE_PRIVATE)
 
-        themeSwitcher.isChecked = prefs.getBoolean(App.DARK_THEME_KEY, false)
+
+        val currentSettings = settingsInteractor.getThemeSettings()
+        themeSwitcher.isChecked = currentSettings.isDarkTheme
 
         themeSwitcher.setOnCheckedChangeListener { _, checked ->
-            prefs.edit().putBoolean(App.DARK_THEME_KEY, checked).apply()
+
+            settingsInteractor.updateThemeSetting(ThemeSettings(checked))
 
             AppCompatDelegate.setDefaultNightMode(
                 if (checked) {
@@ -68,13 +79,8 @@ class SettingsActivity : AppCompatActivity() {
         val shareIconButton = findViewById<ImageButton>(R.id.button_settings_2)
         val shareTextView = findViewById<TextView>(R.id.button_settings_1)
 
-        shareIconButton.setOnClickListener {
-            shareApp()
-        }
-
-        shareTextView.setOnClickListener {
-            shareApp()
-        }
+        shareIconButton.setOnClickListener { shareApp() }
+        shareTextView.setOnClickListener { shareApp() }
     }
 
     private fun shareApp() {
@@ -96,13 +102,8 @@ class SettingsActivity : AppCompatActivity() {
         val supportIconButton = findViewById<ImageButton>(R.id.support_2)
         val supportTextView = findViewById<TextView>(R.id.support_1)
 
-        supportIconButton.setOnClickListener {
-            sendSupportEmail()
-        }
-
-        supportTextView.setOnClickListener {
-            sendSupportEmail()
-        }
+        supportIconButton.setOnClickListener { sendSupportEmail() }
+        supportTextView.setOnClickListener { sendSupportEmail() }
     }
 
     private fun sendSupportEmail() {
@@ -123,13 +124,8 @@ class SettingsActivity : AppCompatActivity() {
         val agreementIconButton = findViewById<ImageButton>(R.id.agreement_icon)
         val agreementTextView = findViewById<TextView>(R.id.agreement_text)
 
-        agreementIconButton.setOnClickListener {
-            openUserAgreement()
-        }
-
-        agreementTextView.setOnClickListener {
-            openUserAgreement()
-        }
+        agreementIconButton.setOnClickListener { openUserAgreement() }
+        agreementTextView.setOnClickListener { openUserAgreement() }
     }
 
     private fun openUserAgreement() {

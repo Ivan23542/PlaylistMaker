@@ -1,6 +1,5 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.search
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -24,9 +23,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.example.playlistmaker.R
+import com.example.playlistmaker.creator.Creator
+import com.example.playlistmaker.domain.interactor.SearchHistoryInteractor
+import com.example.playlistmaker.domain.interactor.TracksInteractor
+import com.example.playlistmaker.domain.model.Track
+import com.example.playlistmaker.presentation.player.PlayerActivity
 
 class PoiskActivity : AppCompatActivity() {
 
@@ -42,7 +44,10 @@ class PoiskActivity : AppCompatActivity() {
     private lateinit var historyRecyclerView: RecyclerView
     private lateinit var clearHistoryButton: Button
     private lateinit var historyAdapter: TrackAdapter
-    private lateinit var searchHistory: SearchHistory
+
+
+    private lateinit var searchHistoryInteractor: SearchHistoryInteractor
+    private lateinit var tracksInteractor: TracksInteractor
 
     private lateinit var placeholderContainer: View
     private lateinit var placeholderImage: ImageView
@@ -74,12 +79,13 @@ class PoiskActivity : AppCompatActivity() {
         val rootView = findViewById<View>(R.id.rootView)
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.updatePadding(
-                top = systemBars.top,
-                bottom = systemBars.bottom
-            )
+            view.updatePadding(top = systemBars.top, bottom = systemBars.bottom)
             insets
         }
+
+
+        searchHistoryInteractor = Creator.provideSearchHistoryInteractor(this)
+        tracksInteractor = Creator.provideTracksInteractor()
 
         setupViews()
         setupBackButton()
@@ -120,43 +126,33 @@ class PoiskActivity : AppCompatActivity() {
         clearButton = findViewById(R.id.crest)
         searchIcon = findViewById(R.id.search_icon)
         searchFieldContainer = findViewById(R.id.search_field_container)
-
         tracksRecyclerView = findViewById(R.id.tracksRecyclerView)
-
         historyContainer = findViewById(R.id.historyContainer)
         historyRecyclerView = findViewById(R.id.historyRecyclerView)
         clearHistoryButton = findViewById(R.id.clearHistoryButton)
-
         placeholderContainer = findViewById(R.id.placeholderContainer)
         placeholderImage = findViewById(R.id.placeholderImage)
         placeholderText = findViewById(R.id.placeholderText)
         placeholderSubtext = findViewById(R.id.placeholderSubtext)
         retryButton = findViewById(R.id.retryButton)
-
         searchProgressBar = findViewById(R.id.searchProgressBar)
-
-        searchHistory = SearchHistory(
-            getSharedPreferences("playlist_maker_prefs", Context.MODE_PRIVATE)
-        )
     }
 
     private fun setupBackButton() {
-        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
-            finish()
-        }
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener { finish() }
     }
 
     private fun setupRecyclerViews() {
         trackAdapter = TrackAdapter(emptyList()) { track ->
             if (clickDebounce()) {
-                searchHistory.add(track)
+                searchHistoryInteractor.add(track)
                 openPlayer(track)
             }
         }
 
         historyAdapter = TrackAdapter(emptyList()) { track ->
             if (clickDebounce()) {
-                searchHistory.add(track)
+                searchHistoryInteractor.add(track)
                 openPlayer(track)
             }
         }
@@ -178,11 +174,9 @@ class PoiskActivity : AppCompatActivity() {
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val currentText = s?.toString() ?: ""
-
                 searchText = currentText
                 latestSearchText = currentText
                 updateClearButtonVisibility(currentText)
-
                 handler.removeCallbacks(searchRunnable)
 
                 if (currentText.isBlank()) {
@@ -202,28 +196,20 @@ class PoiskActivity : AppCompatActivity() {
 
         searchEditText.setOnEditorActionListener { _, actionId, event ->
             val isDoneAction = actionId == EditorInfo.IME_ACTION_DONE
-            val isEnterKey = event?.keyCode == KeyEvent.KEYCODE_ENTER &&
-                    event.action == KeyEvent.ACTION_DOWN
+            val isEnterKey = event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN
 
             if (isDoneAction || isEnterKey) {
                 val query = searchEditText.text.toString().trim()
                 handler.removeCallbacks(searchRunnable)
-
                 if (query.isNotEmpty()) {
                     latestSearchText = query
                     performSearch(query)
                 }
-
                 true
-            } else {
-                false
-            }
+            } else false
         }
 
-        val focusAndShow = View.OnClickListener {
-            focusAndShowKeyboard()
-        }
-
+        val focusAndShow = View.OnClickListener { focusAndShowKeyboard() }
         searchFieldContainer.setOnClickListener(focusAndShow)
         searchIcon.setOnClickListener(focusAndShow)
         searchEditText.setOnClickListener(focusAndShow)
@@ -251,62 +237,46 @@ class PoiskActivity : AppCompatActivity() {
 
     private fun setupRetryButton() {
         retryButton.setOnClickListener {
-            if (lastSearchQuery.isNotBlank()) {
-                performSearch(lastSearchQuery)
-            }
+            if (lastSearchQuery.isNotBlank()) performSearch(lastSearchQuery)
         }
     }
 
     private fun setupClearHistoryButton() {
         clearHistoryButton.setOnClickListener {
-            searchHistory.clear()
+            searchHistoryInteractor.clear()
             historyAdapter.updateTracks(emptyList())
             historyContainer.visibility = View.GONE
         }
     }
 
+
     private fun performSearch(query: String) {
         lastSearchQuery = query
         showLoading()
 
-        NetworkClient.iTunesApi.search(query).enqueue(object : Callback<SearchResponse> {
-            override fun onResponse(call: Call<SearchResponse>, response: Response<SearchResponse>) {
-                if (query != latestSearchText.trim()) return
+        tracksInteractor.searchTracks(query, object : TracksInteractor.TracksConsumer {
+            override fun consume(foundTracks: List<Track>?, errorMessage: String?) {
+                handler.post {
+                    if (query != latestSearchText.trim()) return@post
 
-                if (!response.isSuccessful) {
-                    showConnectionError()
-                    return
+                    if (errorMessage != null) {
+                        showConnectionError()
+                    } else if (foundTracks.isNullOrEmpty()) {
+                        showNothingFound()
+                    } else {
+                        showTracks(foundTracks)
+                    }
                 }
-
-                val foundTracks = response.body()?.results
-                    ?.map { TrackMapper.map(it) }
-                    ?.filter { it.trackName.isNotBlank() || it.artistName.isNotBlank() }
-                    ?: emptyList()
-
-                if (foundTracks.isEmpty()) {
-                    showNothingFound()
-                } else {
-                    showTracks(foundTracks)
-                }
-            }
-
-            override fun onFailure(call: Call<SearchResponse>, t: Throwable) {
-                if (query != latestSearchText.trim()) return
-                showConnectionError()
             }
         })
     }
 
     private fun clickDebounce(): Boolean {
         val current = isClickAllowed
-
         if (isClickAllowed) {
             isClickAllowed = false
-            handler.postDelayed({
-                isClickAllowed = true
-            }, CLICK_DEBOUNCE_DELAY)
+            handler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
         }
-
         return current
     }
 
@@ -333,8 +303,7 @@ class PoiskActivity : AppCompatActivity() {
 
     private fun showHistory() {
         searchProgressBar.visibility = View.GONE
-
-        val historyTracks = searchHistory.read()
+        val historyTracks = searchHistoryInteractor.read()
 
         if (searchEditText.text.isEmpty() && searchEditText.hasFocus() && historyTracks.isNotEmpty()) {
             tracksRecyclerView.visibility = View.GONE
@@ -351,12 +320,10 @@ class PoiskActivity : AppCompatActivity() {
         historyContainer.visibility = View.GONE
         tracksRecyclerView.visibility = View.GONE
         placeholderContainer.visibility = View.VISIBLE
-
         placeholderImage.visibility = View.VISIBLE
         placeholderText.visibility = View.VISIBLE
         placeholderSubtext.visibility = View.GONE
         retryButton.visibility = View.GONE
-
         placeholderImage.setImageResource(R.drawable.nothing_found)
         placeholderText.setText(R.string.nothing_found)
     }
@@ -366,12 +333,10 @@ class PoiskActivity : AppCompatActivity() {
         historyContainer.visibility = View.GONE
         tracksRecyclerView.visibility = View.GONE
         placeholderContainer.visibility = View.VISIBLE
-
         placeholderImage.visibility = View.VISIBLE
         placeholderText.visibility = View.VISIBLE
         placeholderSubtext.visibility = View.VISIBLE
         retryButton.visibility = View.VISIBLE
-
         placeholderImage.setImageResource(R.drawable.connection_error)
         placeholderText.setText(R.string.connection_error)
         placeholderSubtext.setText(R.string.connection_error_message)
@@ -393,9 +358,7 @@ class PoiskActivity : AppCompatActivity() {
 
     private fun focusAndShowKeyboard() {
         searchEditText.post {
-            if (!searchEditText.isFocused) {
-                searchEditText.requestFocus()
-            }
+            if (!searchEditText.isFocused) searchEditText.requestFocus()
             showKeyboard()
         }
     }
@@ -413,7 +376,6 @@ class PoiskActivity : AppCompatActivity() {
     companion object {
         private const val SEARCH_TEXT_KEY = "search_text"
         const val TRACK_EXTRA = "track_extra"
-
         private const val SEARCH_DEBOUNCE_DELAY = 2000L
         private const val CLICK_DEBOUNCE_DELAY = 1000L
     }
