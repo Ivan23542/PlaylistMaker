@@ -8,10 +8,12 @@ class SearchHistoryRepositoryImpl(
     private val searchHistory: SearchHistory
 ) : SearchHistoryRepository {
 
-    override fun read(): List<Track> = searchHistory.read()
+    override fun read(): List<Track> {
+        return searchHistory.read()
+    }
 
-    override fun add(track: Track) {
-        searchHistory.add(track)
+    override fun save(tracks: List<Track>) {
+        searchHistory.save(tracks)
     }
 
     override fun clear() {
