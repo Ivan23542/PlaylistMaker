@@ -6,7 +6,6 @@ import com.example.playlistmaker.data.player.PlayerRepositoryImpl
 import com.example.playlistmaker.data.repository.SearchHistoryRepositoryImpl
 import com.example.playlistmaker.data.repository.TracksRepositoryImpl
 import com.example.playlistmaker.data.storage.PlaylistStorage
-import com.example.playlistmaker.data.storage.SearchHistory
 import com.example.playlistmaker.domain.interactor.PlayerInteractor
 import com.example.playlistmaker.domain.interactor.SearchHistoryInteractor
 import com.example.playlistmaker.domain.interactor.SearchHistoryInteractorImpl
@@ -40,10 +39,14 @@ object Creator {
     }
 
     fun provideSearchHistoryInteractor(context: Context): SearchHistoryInteractor {
-        val searchHistory = SearchHistory(
-            context.getSharedPreferences("playlist_maker_prefs", Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences(
+            "playlist_maker_prefs",
+            Context.MODE_PRIVATE
         )
-        return SearchHistoryInteractorImpl(SearchHistoryRepositoryImpl(searchHistory))
+
+        return SearchHistoryInteractorImpl(
+            SearchHistoryRepositoryImpl(sharedPreferences)
+        )
     }
 
     fun providePlayerInteractor(): PlayerInteractor {
