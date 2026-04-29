@@ -1,7 +1,6 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.player
 
 import android.content.Intent
-import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -18,11 +17,19 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.example.playlistmaker.R
+import com.example.playlistmaker.creator.Creator
+import com.example.playlistmaker.domain.interactor.PlayerInteractor
+import com.example.playlistmaker.domain.model.Track
+import com.example.playlistmaker.presentation.playlist.NewPlaylistActivity
+import com.example.playlistmaker.presentation.search.PoiskActivity
 import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class PlayerActivity : AppCompatActivity() {
+
+    private val playerInteractor: PlayerInteractor = Creator.providePlayerInteractor()
 
     private var isFavorite = false
     private var playerState = STATE_DEFAULT
@@ -43,13 +50,13 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var genreValueTextView: TextView
     private lateinit var countryValueTextView: TextView
 
-    private var mediaPlayer = MediaPlayer()
     private val handler = Handler(Looper.getMainLooper())
 
     private val progressRunnable = object : Runnable {
         override fun run() {
             progressTextView.text = SimpleDateFormat("mm:ss", Locale.getDefault())
-                .format(mediaPlayer.currentPosition)
+                .format(playerInteractor.getCurrentPosition())
+
             handler.postDelayed(this, PROGRESS_DELAY)
         }
     }
@@ -172,34 +179,25 @@ class PlayerActivity : AppCompatActivity() {
 
         playButton.isEnabled = false
 
-        try {
-            mediaPlayer.setDataSource(previewUrl)
-            mediaPlayer.prepareAsync()
-
-            mediaPlayer.setOnPreparedListener {
+        playerInteractor.preparePlayer(
+            url = previewUrl,
+            onPrepared = {
                 playerState = STATE_PREPARED
                 playButton.isEnabled = true
-            }
-
-            mediaPlayer.setOnCompletionListener {
+            },
+            onCompletion = {
                 playButton.setImageResource(R.drawable.ic_play)
                 progressTextView.text = START_PROGRESS
                 handler.removeCallbacks(progressRunnable)
-                mediaPlayer.seekTo(0)
                 playerState = STATE_PREPARED
-            }
-
-            mediaPlayer.setOnErrorListener { _, _, _ ->
+            },
+            onError = {
                 playButton.setImageResource(R.drawable.ic_play)
                 progressTextView.text = START_PROGRESS
                 handler.removeCallbacks(progressRunnable)
                 playerState = STATE_DEFAULT
-                true
             }
-        } catch (e: Exception) {
-            playButton.isEnabled = false
-            playerState = STATE_DEFAULT
-        }
+        )
     }
 
     private fun playbackControl() {
@@ -210,25 +208,21 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun startPlayer() {
-        mediaPlayer.start()
+        playerInteractor.startPlayer()
         playButton.setImageResource(R.drawable.ic_pause)
         playerState = STATE_PLAYING
         handler.post(progressRunnable)
     }
 
     private fun pausePlayer() {
-        mediaPlayer.pause()
+        playerInteractor.pausePlayer()
         playButton.setImageResource(R.drawable.ic_play)
         playerState = STATE_PAUSED
         handler.removeCallbacks(progressRunnable)
     }
 
     private fun stopPlayer() {
-        if (playerState == STATE_PLAYING || playerState == STATE_PAUSED) {
-            mediaPlayer.pause()
-            mediaPlayer.seekTo(0)
-        }
-
+        playerInteractor.stopPlayer()
         playButton.setImageResource(R.drawable.ic_play)
         progressTextView.text = START_PROGRESS
         handler.removeCallbacks(progressRunnable)
@@ -289,7 +283,7 @@ class PlayerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacks(progressRunnable)
-        mediaPlayer.release()
+        playerInteractor.release()
     }
 
     companion object {

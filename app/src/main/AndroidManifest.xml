@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
@@ -14,10 +15,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PlaylistMaker">
 
-
-
         <activity
-            android:name=".MainActivity"
+            android:name=".presentation.main.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,26 +24,26 @@
             </intent-filter>
         </activity>
 
-
         <activity
-            android:name=".PoiskActivity"
+            android:name=".presentation.search.PoiskActivity"
             android:exported="false"
             android:windowSoftInputMode="stateHidden|adjustResize"
-            android:supportsPictureInPicture="false"
-             />
+            android:supportsPictureInPicture="false" />
+
         <activity
-            android:name=".MediatekaActivity"
-            android:exported="false"/>
-        <activity
-            android:name=".SettingsActivity"
+            android:name=".presentation.media.MediatekaActivity"
             android:exported="false"/>
 
         <activity
-            android:name=".PlayerActivity"
+            android:name=".presentation.settings.SettingsActivity"
+            android:exported="false"/>
+
+        <activity
+            android:name=".presentation.player.PlayerActivity"
             android:exported="false" />
 
         <activity
-            android:name=".NewPlaylistActivity"
+            android:name=".presentation.playlist.NewPlaylistActivity"
             android:exported="false" />
 
     </application>

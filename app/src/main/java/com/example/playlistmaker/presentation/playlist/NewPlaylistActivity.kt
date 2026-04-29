@@ -1,16 +1,17 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.playlist
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
+import com.example.playlistmaker.domain.model.Playlist
+import com.example.playlistmaker.data.storage.PlaylistStorage
+import com.example.playlistmaker.R
+import com.example.playlistmaker.creator.Creator
 
 class NewPlaylistActivity : AppCompatActivity() {
 
@@ -24,17 +25,14 @@ class NewPlaylistActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_new_playlist)
 
-        playlistStorage = PlaylistStorage(
-            getSharedPreferences("playlist_maker_prefs", Context.MODE_PRIVATE)
-        )
+
+        playlistStorage = Creator.providePlaylistStorage(this)
 
         nameEditText = findViewById(R.id.playlistNameEditText)
         descriptionEditText = findViewById(R.id.playlistDescriptionEditText)
         createButton = findViewById(R.id.createButton)
 
-        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
-            finish()
-        }
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener { finish() }
 
         createButton.isEnabled = false
 
@@ -65,6 +63,4 @@ class NewPlaylistActivity : AppCompatActivity() {
     companion object {
         const val PLAYLIST_NAME_EXTRA = "playlist_name_extra"
     }
-
-
 }
