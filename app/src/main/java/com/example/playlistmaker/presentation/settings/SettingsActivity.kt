@@ -13,14 +13,14 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.ViewModelProvider
 import com.example.playlistmaker.R
 import com.example.playlistmaker.creator.Creator
-import com.example.playlistmaker.domain.interactor.SettingsInteractor
-import com.example.playlistmaker.domain.model.ThemeSettings
 
 class SettingsActivity : AppCompatActivity() {
 
-    private lateinit var settingsInteractor: SettingsInteractor
+    private lateinit var viewModel: SettingsViewModel
+    private lateinit var themeSwitcher: Switch
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,36 +37,38 @@ class SettingsActivity : AppCompatActivity() {
             insets
         }
 
-
-        settingsInteractor = Creator.provideSettingsInteractor(this)
+        viewModel = ViewModelProvider(
+            this,
+            Creator.provideSettingsViewModelFactory(applicationContext)
+        )[SettingsViewModel::class.java]
 
         setupBackButton()
         setupThemeSwitcher()
+        observeViewModel()
         setupShareButton()
         setupSupportButton()
         setupAgreementButton()
     }
 
     private fun setupBackButton() {
-        val backButton = findViewById<ImageButton>(R.id.back)
-        backButton.setOnClickListener {
-            finish()
-        }
+        findViewById<ImageButton>(R.id.back).setOnClickListener { finish() }
     }
 
     private fun setupThemeSwitcher() {
-        val themeSwitcher = findViewById<Switch>(R.id.themeSwitcher)
-
-
-        val currentSettings = settingsInteractor.getThemeSettings()
-        themeSwitcher.isChecked = currentSettings.isDarkTheme
-
+        themeSwitcher = findViewById(R.id.themeSwitcher)
         themeSwitcher.setOnCheckedChangeListener { _, checked ->
+            viewModel.onThemeCheckedChanged(checked)
+        }
+    }
 
-            settingsInteractor.updateThemeSetting(ThemeSettings(checked))
+    private fun observeViewModel() {
+        viewModel.uiState.observe(this) { state ->
+            if (themeSwitcher.isChecked != state.isDarkTheme) {
+                themeSwitcher.isChecked = state.isDarkTheme
+            }
 
             AppCompatDelegate.setDefaultNightMode(
-                if (checked) {
+                if (state.isDarkTheme) {
                     AppCompatDelegate.MODE_NIGHT_YES
                 } else {
                     AppCompatDelegate.MODE_NIGHT_NO

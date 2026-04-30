@@ -2,19 +2,16 @@ package com.example.playlistmaker
 
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
+import com.example.playlistmaker.creator.Creator
 
 class App : Application() {
-
-    companion object {
-        const val PREFS_NAME = "playlist_maker_prefs"
-        const val DARK_THEME_KEY = "dark_theme"
-    }
 
     override fun onCreate() {
         super.onCreate()
 
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        val darkThemeEnabled = prefs.getBoolean(DARK_THEME_KEY, false)
+        val darkThemeEnabled = Creator.provideSettingsInteractor(this)
+            .getThemeSettings()
+            .isDarkTheme
 
         AppCompatDelegate.setDefaultNightMode(
             if (darkThemeEnabled) {
