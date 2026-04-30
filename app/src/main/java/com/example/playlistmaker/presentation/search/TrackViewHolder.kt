@@ -16,12 +16,14 @@ class TrackViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
     private val artworkImageView: ImageView = itemView.findViewById(R.id.artworkImageView)
     private val trackNameTextView: TextView = itemView.findViewById(R.id.trackNameTextView)
     private val artistNameTextView: TextView = itemView.findViewById(R.id.artistNameTextView)
-    private val trackTimeTextView: TextView = itemView.findViewById(R.id.trackTimeTextView)
 
     fun bind(track: Track) {
         trackNameTextView.text = track.trackName
-        artistNameTextView.text = track.artistName
-        trackTimeTextView.text = track.trackTime
+        artistNameTextView.text = itemView.context.getString(
+            R.string.track_subtitle_format,
+            track.artistName,
+            track.trackTime
+        )
 
         Glide.with(itemView)
             .load(track.artworkUrl100)

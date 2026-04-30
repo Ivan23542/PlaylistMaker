@@ -77,13 +77,11 @@
             android:id="@+id/addToPlaylistButton"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="16dp"
             android:layout_marginTop="48dp"
             android:background="@drawable/player_small_button_bg"
             android:contentDescription="@string/add_to_playlist"
             android:src="@drawable/ic_add_playlist"
-            app:layout_constraintEnd_toStartOf="@id/playButton"
-            app:layout_constraintHorizontal_chainStyle="spread"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/artistNameTextView"
             app:tint="@color/player_small_icon_color" />
@@ -95,9 +93,11 @@
             android:layout_marginTop="34dp"
             android:background="@drawable/player_play_button_bg"
             android:contentDescription="@string/play"
+            android:padding="0dp"
+            android:scaleType="center"
             android:src="@drawable/ic_play"
-            app:layout_constraintEnd_toStartOf="@id/favoriteButton"
-            app:layout_constraintStart_toEndOf="@id/addToPlaylistButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/artistNameTextView"
             app:tint="@color/play_icon_color" />
 
@@ -106,12 +106,11 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginTop="48dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginEnd="16dp"
             android:background="@drawable/player_small_button_bg"
             android:contentDescription="@string/add_to_favorites"
             android:src="@drawable/ic_favorite"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/playButton"
             app:layout_constraintTop_toBottomOf="@id/artistNameTextView" />
 
         <TextView
@@ -130,7 +129,7 @@
         <TextView
             android:id="@+id/durationTitleTextView"
             style="@style/PlayerInfoTitle"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="16dp"
             android:layout_marginTop="32dp"
             android:text="@string/duration"
             app:layout_constraintStart_toStartOf="parent"
@@ -139,7 +138,7 @@
         <TextView
             android:id="@+id/durationValueTextView"
             style="@style/PlayerInfoValue"
-            android:layout_marginEnd="24dp"
+            android:layout_marginEnd="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/durationTitleTextView"
             tools:text="5:35" />
@@ -147,7 +146,7 @@
         <TextView
             android:id="@+id/albumTitleTextView"
             style="@style/PlayerInfoTitle"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:text="@string/album"
             app:layout_constraintStart_toStartOf="parent"
@@ -158,7 +157,7 @@
             style="@style/PlayerInfoValue"
             android:layout_width="0dp"
             android:layout_marginStart="16dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginEnd="16dp"
             android:ellipsize="end"
             android:gravity="end"
             android:maxLines="1"
@@ -170,7 +169,7 @@
         <TextView
             android:id="@+id/yearTitleTextView"
             style="@style/PlayerInfoTitle"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:text="@string/year"
             app:layout_constraintStart_toStartOf="parent"
@@ -179,7 +178,7 @@
         <TextView
             android:id="@+id/yearValueTextView"
             style="@style/PlayerInfoValue"
-            android:layout_marginEnd="24dp"
+            android:layout_marginEnd="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/yearTitleTextView"
             tools:text="1965" />
@@ -187,7 +186,7 @@
         <TextView
             android:id="@+id/genreTitleTextView"
             style="@style/PlayerInfoTitle"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:text="@string/genre"
             app:layout_constraintStart_toStartOf="parent"
@@ -196,7 +195,7 @@
         <TextView
             android:id="@+id/genreValueTextView"
             style="@style/PlayerInfoValue"
-            android:layout_marginEnd="24dp"
+            android:layout_marginEnd="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/genreTitleTextView"
             tools:text="Rock" />
@@ -204,7 +203,7 @@
         <TextView
             android:id="@+id/countryTitleTextView"
             style="@style/PlayerInfoTitle"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:text="@string/country"
             app:layout_constraintStart_toStartOf="parent"
@@ -213,10 +212,10 @@
         <TextView
             android:id="@+id/countryValueTextView"
             style="@style/PlayerInfoValue"
-            android:layout_marginEnd="24dp"
+            android:layout_marginEnd="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/countryTitleTextView"
-            tools:text="Великобритания" />
+            tools:text="United Kingdom" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
