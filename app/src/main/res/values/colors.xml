@@ -21,7 +21,7 @@
     <color name="retry_button_text_color">#FFFFFF</color>
     <color name="placeholder_icon_color">#000000</color>
     <color name="player_small_button_color">#E6E8EB</color>
-    <color name="player_small_icon_color">#FFFFFF</color>
+    <color name="player_small_icon_color">#AEAFB4</color>
     <color name="player_play_button_color">#1A1B22</color>
     <color name="play_icon_color">#FFFFFF</color>
     <color name="favorite_red">#F56B6C</color>

@@ -8,8 +8,7 @@ import android.widget.ImageButton
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
-import com.example.playlistmaker.domain.model.Playlist
-import com.example.playlistmaker.data.storage.PlaylistStorage
+import androidx.lifecycle.ViewModelProvider
 import com.example.playlistmaker.R
 import com.example.playlistmaker.creator.Creator
 
@@ -18,15 +17,17 @@ class NewPlaylistActivity : AppCompatActivity() {
     private lateinit var nameEditText: EditText
     private lateinit var descriptionEditText: EditText
     private lateinit var createButton: Button
-    private lateinit var playlistStorage: PlaylistStorage
+    private lateinit var viewModel: NewPlaylistViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_new_playlist)
 
-
-        playlistStorage = Creator.providePlaylistStorage(this)
+        viewModel = ViewModelProvider(
+            this,
+            Creator.provideNewPlaylistViewModelFactory(applicationContext)
+        )[NewPlaylistViewModel::class.java]
 
         nameEditText = findViewById(R.id.playlistNameEditText)
         descriptionEditText = findViewById(R.id.playlistDescriptionEditText)
@@ -34,29 +35,41 @@ class NewPlaylistActivity : AppCompatActivity() {
 
         findViewById<ImageButton>(R.id.backButton).setOnClickListener { finish() }
 
-        createButton.isEnabled = false
+        observeViewModel()
 
         nameEditText.addTextChangedListener {
-            createButton.isEnabled = !it.isNullOrBlank()
+            viewModel.onNameChanged(it?.toString().orEmpty())
         }
 
-        createButton.setOnClickListener {
-            val playlistName = nameEditText.text.toString().trim()
-            val playlistDescription = descriptionEditText.text.toString().trim()
+        descriptionEditText.addTextChangedListener {
+            viewModel.onDescriptionChanged(it?.toString().orEmpty())
+        }
 
-            val playlist = Playlist(
-                name = playlistName,
-                description = playlistDescription
-            )
+        createButton.setOnClickListener { viewModel.onCreateButtonClicked() }
+    }
 
-            playlistStorage.savePlaylist(playlist)
-
-            val resultIntent = Intent().apply {
-                putExtra(PLAYLIST_NAME_EXTRA, playlistName)
+    private fun observeViewModel() {
+        viewModel.uiState.observe(this) { state ->
+            if (nameEditText.text.toString() != state.name) {
+                nameEditText.setText(state.name)
+                nameEditText.setSelection(state.name.length)
             }
 
-            setResult(RESULT_OK, resultIntent)
-            finish()
+            if (descriptionEditText.text.toString() != state.description) {
+                descriptionEditText.setText(state.description)
+                descriptionEditText.setSelection(state.description.length)
+            }
+
+            createButton.isEnabled = state.isCreateButtonEnabled
+
+            state.createdPlaylistName?.let { playlistName ->
+                viewModel.onPlaylistCreatedHandled()
+                val resultIntent = Intent().apply {
+                    putExtra(PLAYLIST_NAME_EXTRA, playlistName)
+                }
+                setResult(RESULT_OK, resultIntent)
+                finish()
+            }
         }
     }
 

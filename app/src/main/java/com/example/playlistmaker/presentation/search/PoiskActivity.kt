@@ -21,12 +21,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.playlistmaker.R
 import com.example.playlistmaker.creator.Creator
-import com.example.playlistmaker.domain.interactor.SearchHistoryInteractor
-import com.example.playlistmaker.domain.interactor.TracksInteractor
 import com.example.playlistmaker.domain.model.Track
 import com.example.playlistmaker.presentation.player.PlayerActivity
 
@@ -45,10 +44,6 @@ class PoiskActivity : AppCompatActivity() {
     private lateinit var clearHistoryButton: Button
     private lateinit var historyAdapter: TrackAdapter
 
-
-    private lateinit var searchHistoryInteractor: SearchHistoryInteractor
-    private lateinit var tracksInteractor: TracksInteractor
-
     private lateinit var placeholderContainer: View
     private lateinit var placeholderImage: ImageView
     private lateinit var placeholderText: TextView
@@ -56,20 +51,10 @@ class PoiskActivity : AppCompatActivity() {
     private lateinit var retryButton: Button
 
     private lateinit var searchProgressBar: ProgressBar
+    private lateinit var viewModel: SearchViewModel
 
-    private val handler = Handler(Looper.getMainLooper())
-
-    private var searchText = ""
-    private var lastSearchQuery = ""
-    private var latestSearchText = ""
+    private val clickHandler = Handler(Looper.getMainLooper())
     private var isClickAllowed = true
-
-    private val searchRunnable = Runnable {
-        val query = latestSearchText.trim()
-        if (query.isNotEmpty()) {
-            performSearch(query)
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,42 +68,28 @@ class PoiskActivity : AppCompatActivity() {
             insets
         }
 
-
-        searchHistoryInteractor = Creator.provideSearchHistoryInteractor(this)
-        tracksInteractor = Creator.provideTracksInteractor()
+        viewModel = ViewModelProvider(
+            this,
+            Creator.provideSearchViewModelFactory(applicationContext)
+        )[SearchViewModel::class.java]
 
         setupViews()
         setupBackButton()
         setupRecyclerViews()
+        observeViewModel()
         setupSearchLogic()
         setupRetryButton()
         setupClearHistoryButton()
-
-        if (savedInstanceState != null) {
-            searchText = savedInstanceState.getString(SEARCH_TEXT_KEY, "")
-            latestSearchText = searchText
-            searchEditText.setText(searchText)
-            updateClearButtonVisibility(searchText)
-
-            if (searchText.isNotBlank()) {
-                performSearch(searchText)
-            } else {
-                hideAllStates()
-                showHistory()
-            }
-        } else {
-            hideAllStates()
-        }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putString(SEARCH_TEXT_KEY, searchText)
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshHistory()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeCallbacks(searchRunnable)
+        clickHandler.removeCallbacksAndMessages(null)
     }
 
     private fun setupViews() {
@@ -145,14 +116,14 @@ class PoiskActivity : AppCompatActivity() {
     private fun setupRecyclerViews() {
         trackAdapter = TrackAdapter(emptyList()) { track ->
             if (clickDebounce()) {
-                searchHistoryInteractor.add(track)
+                viewModel.onTrackClicked(track)
                 openPlayer(track)
             }
         }
 
         historyAdapter = TrackAdapter(emptyList()) { track ->
             if (clickDebounce()) {
-                searchHistoryInteractor.add(track)
+                viewModel.onTrackClicked(track)
                 openPlayer(track)
             }
         }
@@ -166,29 +137,32 @@ class PoiskActivity : AppCompatActivity() {
         historyContainer.visibility = View.GONE
     }
 
-    private fun setupSearchLogic() {
-        updateClearButtonVisibility(searchEditText.text.toString())
+    private fun observeViewModel() {
+        viewModel.uiState.observe(this) { state ->
+            if (searchEditText.text.toString() != state.searchText) {
+                searchEditText.setText(state.searchText)
+                searchEditText.setSelection(state.searchText.length)
+            }
 
+            clearButton.visibility = if (state.isClearButtonVisible) View.VISIBLE else View.GONE
+
+            when (val contentState = state.contentState) {
+                SearchContentState.Idle -> hideAllStates()
+                SearchContentState.Loading -> showLoading()
+                SearchContentState.NothingFound -> showNothingFound()
+                SearchContentState.ConnectionError -> showConnectionError()
+                is SearchContentState.SearchResults -> showTracks(contentState.tracks)
+                is SearchContentState.History -> showHistory(contentState.tracks)
+            }
+        }
+    }
+
+    private fun setupSearchLogic() {
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val currentText = s?.toString() ?: ""
-                searchText = currentText
-                latestSearchText = currentText
-                updateClearButtonVisibility(currentText)
-                handler.removeCallbacks(searchRunnable)
-
-                if (currentText.isBlank()) {
-                    hideAllStates()
-                    showHistory()
-                } else {
-                    historyContainer.visibility = View.GONE
-                    tracksRecyclerView.visibility = View.GONE
-                    placeholderContainer.visibility = View.GONE
-                    searchProgressBar.visibility = View.GONE
-                    handler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
-                }
+                viewModel.onSearchTextChanged(s?.toString().orEmpty())
             }
 
             override fun afterTextChanged(s: Editable?) = Unit
@@ -199,14 +173,11 @@ class PoiskActivity : AppCompatActivity() {
             val isEnterKey = event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN
 
             if (isDoneAction || isEnterKey) {
-                val query = searchEditText.text.toString().trim()
-                handler.removeCallbacks(searchRunnable)
-                if (query.isNotEmpty()) {
-                    latestSearchText = query
-                    performSearch(query)
-                }
+                viewModel.onSearchSubmitted()
                 true
-            } else false
+            } else {
+                false
+            }
         }
 
         val focusAndShow = View.OnClickListener { focusAndShowKeyboard() }
@@ -217,65 +188,30 @@ class PoiskActivity : AppCompatActivity() {
         searchEditText.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 showKeyboard()
-                showHistory()
-            } else {
-                historyContainer.visibility = View.GONE
             }
+            viewModel.onSearchFocusChanged(hasFocus)
         }
 
         clearButton.setOnClickListener {
-            handler.removeCallbacks(searchRunnable)
-            searchEditText.setText("")
-            searchText = ""
-            latestSearchText = ""
+            viewModel.onClearClicked()
             hideKeyboard()
             searchEditText.clearFocus()
-            updateClearButtonVisibility("")
-            hideAllStates()
         }
     }
 
     private fun setupRetryButton() {
-        retryButton.setOnClickListener {
-            if (lastSearchQuery.isNotBlank()) performSearch(lastSearchQuery)
-        }
+        retryButton.setOnClickListener { viewModel.onRetryClicked() }
     }
 
     private fun setupClearHistoryButton() {
-        clearHistoryButton.setOnClickListener {
-            searchHistoryInteractor.clear()
-            historyAdapter.updateTracks(emptyList())
-            historyContainer.visibility = View.GONE
-        }
-    }
-
-
-    private fun performSearch(query: String) {
-        lastSearchQuery = query
-        showLoading()
-
-        tracksInteractor.searchTracks(query, object : TracksInteractor.TracksConsumer {
-            override fun consume(foundTracks: List<Track>?, errorMessage: String?) {
-                handler.post {
-                    if (query != latestSearchText.trim()) return@post
-
-                    if (errorMessage != null) {
-                        showConnectionError()
-                    } else if (foundTracks.isNullOrEmpty()) {
-                        showNothingFound()
-                    } else {
-                        showTracks(foundTracks)
-                    }
-                }
-            }
-        })
+        clearHistoryButton.setOnClickListener { viewModel.onClearHistoryClicked() }
     }
 
     private fun clickDebounce(): Boolean {
         val current = isClickAllowed
         if (isClickAllowed) {
             isClickAllowed = false
-            handler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
+            clickHandler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
         }
         return current
     }
@@ -301,18 +237,12 @@ class PoiskActivity : AppCompatActivity() {
         trackAdapter.updateTracks(tracks)
     }
 
-    private fun showHistory() {
+    private fun showHistory(tracks: List<Track>) {
         searchProgressBar.visibility = View.GONE
-        val historyTracks = searchHistoryInteractor.read()
-
-        if (searchEditText.text.isEmpty() && searchEditText.hasFocus() && historyTracks.isNotEmpty()) {
-            tracksRecyclerView.visibility = View.GONE
-            placeholderContainer.visibility = View.GONE
-            historyContainer.visibility = View.VISIBLE
-            historyAdapter.updateTracks(historyTracks)
-        } else {
-            historyContainer.visibility = View.GONE
-        }
+        tracksRecyclerView.visibility = View.GONE
+        placeholderContainer.visibility = View.GONE
+        historyContainer.visibility = View.VISIBLE
+        historyAdapter.updateTracks(tracks)
     }
 
     private fun showNothingFound() {
@@ -352,13 +282,11 @@ class PoiskActivity : AppCompatActivity() {
         trackAdapter.updateTracks(emptyList())
     }
 
-    private fun updateClearButtonVisibility(text: String) {
-        clearButton.visibility = if (text.isEmpty()) View.GONE else View.VISIBLE
-    }
-
     private fun focusAndShowKeyboard() {
         searchEditText.post {
-            if (!searchEditText.isFocused) searchEditText.requestFocus()
+            if (!searchEditText.isFocused) {
+                searchEditText.requestFocus()
+            }
             showKeyboard()
         }
     }
@@ -374,9 +302,7 @@ class PoiskActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val SEARCH_TEXT_KEY = "search_text"
         const val TRACK_EXTRA = "track_extra"
-        private const val SEARCH_DEBOUNCE_DELAY = 2000L
         private const val CLICK_DEBOUNCE_DELAY = 1000L
     }
 }

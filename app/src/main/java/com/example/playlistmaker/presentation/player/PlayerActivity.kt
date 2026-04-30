@@ -2,8 +2,6 @@ package com.example.playlistmaker.presentation.player
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.widget.ImageButton
@@ -15,24 +13,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
 import com.example.playlistmaker.creator.Creator
-import com.example.playlistmaker.domain.interactor.PlayerInteractor
 import com.example.playlistmaker.domain.model.Track
 import com.example.playlistmaker.presentation.playlist.NewPlaylistActivity
 import com.example.playlistmaker.presentation.search.PoiskActivity
 import com.google.android.material.snackbar.Snackbar
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 class PlayerActivity : AppCompatActivity() {
 
-    private val playerInteractor: PlayerInteractor = Creator.providePlayerInteractor()
-
-    private var isFavorite = false
-    private var playerState = STATE_DEFAULT
+    private lateinit var viewModel: PlayerViewModel
+    private var boundTrackId: Long? = null
 
     private lateinit var favoriteButton: ImageButton
     private lateinit var addToPlaylistButton: ImageButton
@@ -50,17 +44,6 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var genreValueTextView: TextView
     private lateinit var countryValueTextView: TextView
 
-    private val handler = Handler(Looper.getMainLooper())
-
-    private val progressRunnable = object : Runnable {
-        override fun run() {
-            progressTextView.text = SimpleDateFormat("mm:ss", Locale.getDefault())
-                .format(playerInteractor.getCurrentPosition())
-
-            handler.postDelayed(this, PROGRESS_DELAY)
-        }
-    }
-
     private val newPlaylistLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
@@ -68,7 +51,7 @@ class PlayerActivity : AppCompatActivity() {
                     result.data?.getStringExtra(NewPlaylistActivity.PLAYLIST_NAME_EXTRA)
 
                 if (!playlistName.isNullOrBlank()) {
-                    showPlaylistCreatedSnackbar(playlistName)
+                    viewModel.onPlaylistCreated(playlistName)
                 }
             }
         }
@@ -88,27 +71,29 @@ class PlayerActivity : AppCompatActivity() {
             insets
         }
 
-        setupViews()
-        setupFavoriteButton()
-        setupAddToPlaylistButton()
-
-        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
-            stopPlayer()
-            finish()
-        }
-
         val track = intent.getSerializableExtra(PoiskActivity.TRACK_EXTRA) as? Track
         if (track == null) {
             finish()
             return
         }
 
-        bindTrack(track)
-        preparePlayer(track.previewUrl)
+        viewModel = ViewModelProvider(
+            this,
+            Creator.providePlayerViewModelFactory(track)
+        )[PlayerViewModel::class.java]
 
-        playButton.setOnClickListener {
-            playbackControl()
-        }
+        setupViews()
+        setupFavoriteButton()
+        setupAddToPlaylistButton()
+        observeViewModel()
+
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener { finish() }
+        playButton.setOnClickListener { viewModel.onPlayButtonClicked() }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.onPause()
     }
 
     private fun setupViews() {
@@ -129,37 +114,63 @@ class PlayerActivity : AppCompatActivity() {
         countryValueTextView = findViewById(R.id.countryValueTextView)
     }
 
-    private fun bindTrack(track: Track) {
+    private fun observeViewModel() {
+        viewModel.uiState.observe(this) { state ->
+            if (boundTrackId != state.track.trackId) {
+                bindTrack(state)
+                boundTrackId = state.track.trackId
+            }
+
+            progressTextView.text = state.progress
+            playButton.isEnabled = state.isPlayButtonEnabled
+            playButton.setImageResource(
+                if (state.isPlaying) R.drawable.ic_pause else R.drawable.ic_play
+            )
+
+            if (state.isFavorite) {
+                favoriteButton.setImageResource(R.drawable.ic_favorite_filled)
+                favoriteButton.clearColorFilter()
+            } else {
+                favoriteButton.setImageResource(R.drawable.ic_favorite)
+                favoriteButton.setColorFilter(getColor(R.color.player_small_icon_color))
+            }
+
+            state.createdPlaylistName?.let { playlistName ->
+                showPlaylistCreatedSnackbar(playlistName)
+                viewModel.onPlaylistCreatedHandled()
+            }
+        }
+    }
+
+    private fun bindTrack(state: PlayerUiState) {
+        val track = state.track
         trackNameTextView.text = track.trackName
         artistNameTextView.text = track.artistName
         durationValueTextView.text = track.trackTime
-        progressTextView.text = START_PROGRESS
+        progressTextView.text = state.progress
         genreValueTextView.text = track.primaryGenreName ?: ""
         countryValueTextView.text = track.country ?: ""
 
-        if (track.collectionName.isNullOrBlank()) {
-            albumTitleTextView.visibility = View.GONE
-            albumValueTextView.visibility = View.GONE
-        } else {
+        if (state.isAlbumVisible) {
             albumTitleTextView.visibility = View.VISIBLE
             albumValueTextView.visibility = View.VISIBLE
-            albumValueTextView.text = track.collectionName
+            albumValueTextView.text = state.album
+        } else {
+            albumTitleTextView.visibility = View.GONE
+            albumValueTextView.visibility = View.GONE
         }
 
-        val year = track.releaseDate?.take(4)
-        if (year.isNullOrBlank()) {
-            yearTitleTextView.visibility = View.GONE
-            yearValueTextView.visibility = View.GONE
-        } else {
+        if (state.isYearVisible) {
             yearTitleTextView.visibility = View.VISIBLE
             yearValueTextView.visibility = View.VISIBLE
-            yearValueTextView.text = year
+            yearValueTextView.text = state.year
+        } else {
+            yearTitleTextView.visibility = View.GONE
+            yearValueTextView.visibility = View.GONE
         }
 
-        val artwork512 = track.artworkUrl100.replaceAfterLast('/', "512x512bb.jpg")
-
         Glide.with(this)
-            .load(artwork512)
+            .load(state.artworkUrl)
             .placeholder(R.drawable.placeholder)
             .error(R.drawable.placeholder)
             .centerCrop()
@@ -171,79 +182,8 @@ class PlayerActivity : AppCompatActivity() {
             .into(coverImageView)
     }
 
-    private fun preparePlayer(previewUrl: String?) {
-        if (previewUrl.isNullOrBlank()) {
-            playButton.isEnabled = false
-            return
-        }
-
-        playButton.isEnabled = false
-
-        playerInteractor.preparePlayer(
-            url = previewUrl,
-            onPrepared = {
-                playerState = STATE_PREPARED
-                playButton.isEnabled = true
-            },
-            onCompletion = {
-                playButton.setImageResource(R.drawable.ic_play)
-                progressTextView.text = START_PROGRESS
-                handler.removeCallbacks(progressRunnable)
-                playerState = STATE_PREPARED
-            },
-            onError = {
-                playButton.setImageResource(R.drawable.ic_play)
-                progressTextView.text = START_PROGRESS
-                handler.removeCallbacks(progressRunnable)
-                playerState = STATE_DEFAULT
-            }
-        )
-    }
-
-    private fun playbackControl() {
-        when (playerState) {
-            STATE_PLAYING -> pausePlayer()
-            STATE_PREPARED, STATE_PAUSED -> startPlayer()
-        }
-    }
-
-    private fun startPlayer() {
-        playerInteractor.startPlayer()
-        playButton.setImageResource(R.drawable.ic_pause)
-        playerState = STATE_PLAYING
-        handler.post(progressRunnable)
-    }
-
-    private fun pausePlayer() {
-        playerInteractor.pausePlayer()
-        playButton.setImageResource(R.drawable.ic_play)
-        playerState = STATE_PAUSED
-        handler.removeCallbacks(progressRunnable)
-    }
-
-    private fun stopPlayer() {
-        playerInteractor.stopPlayer()
-        playButton.setImageResource(R.drawable.ic_play)
-        progressTextView.text = START_PROGRESS
-        handler.removeCallbacks(progressRunnable)
-
-        if (playerState != STATE_DEFAULT) {
-            playerState = STATE_PREPARED
-        }
-    }
-
     private fun setupFavoriteButton() {
-        favoriteButton.setOnClickListener {
-            isFavorite = !isFavorite
-
-            if (isFavorite) {
-                favoriteButton.setImageResource(R.drawable.ic_favorite_filled)
-                favoriteButton.clearColorFilter()
-            } else {
-                favoriteButton.setImageResource(R.drawable.ic_favorite)
-                favoriteButton.setColorFilter(getColor(R.color.player_small_icon_color))
-            }
-        }
+        favoriteButton.setOnClickListener { viewModel.onFavoriteClicked() }
     }
 
     private fun setupAddToPlaylistButton() {
@@ -256,7 +196,7 @@ class PlayerActivity : AppCompatActivity() {
     private fun showPlaylistCreatedSnackbar(playlistName: String) {
         val snackbar = Snackbar.make(
             findViewById(R.id.rootView),
-            "Плейлист «$playlistName» создан",
+            getString(R.string.playlist_created_message, playlistName),
             Snackbar.LENGTH_LONG
         )
 
@@ -271,28 +211,5 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         snackbar.show()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        if (playerState == STATE_PLAYING) {
-            pausePlayer()
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        handler.removeCallbacks(progressRunnable)
-        playerInteractor.release()
-    }
-
-    companion object {
-        private const val STATE_DEFAULT = 0
-        private const val STATE_PREPARED = 1
-        private const val STATE_PLAYING = 2
-        private const val STATE_PAUSED = 3
-
-        private const val PROGRESS_DELAY = 300L
-        private const val START_PROGRESS = "00:00"
     }
 }
