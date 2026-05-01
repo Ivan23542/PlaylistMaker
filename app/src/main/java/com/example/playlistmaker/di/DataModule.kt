@@ -2,6 +2,7 @@ package com.example.playlistmaker.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.media.MediaPlayer
 import com.example.playlistmaker.data.network.ITunesApi
 import com.example.playlistmaker.data.storage.PlaylistStorage
 import com.google.gson.Gson
@@ -30,4 +31,6 @@ val dataModule = module {
     single { Gson() }
 
     single { PlaylistStorage(get(), get()) }
+
+    factory { MediaPlayer() }
 }
