@@ -12,12 +12,17 @@ import com.example.playlistmaker.presentation.media.MediatekaActivity
 import com.example.playlistmaker.presentation.search.PoiskActivity
 import com.example.playlistmaker.R
 import com.example.playlistmaker.presentation.settings.SettingsActivity
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
+
+    private val viewModel: MainViewModel by viewModel()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+        viewModel
 
         val contentContainer = findViewById<View>(R.id.contentContainer)
 

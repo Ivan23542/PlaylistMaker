@@ -6,10 +6,9 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
 class PlaylistStorage(
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences,
+    private val gson: Gson
 ) {
-    private val gson = Gson()
-
     fun savePlaylist(playlist: Playlist) {
         val playlists = getPlaylists().toMutableList()
         playlists.add(playlist)

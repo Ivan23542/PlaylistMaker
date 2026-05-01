@@ -1,6 +1,7 @@
 package com.example.playlistmaker.presentation.player
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -13,19 +14,23 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
-import com.example.playlistmaker.creator.Creator
 import com.example.playlistmaker.domain.model.Track
 import com.example.playlistmaker.presentation.playlist.NewPlaylistActivity
 import com.example.playlistmaker.presentation.search.PoiskActivity
 import com.google.android.material.snackbar.Snackbar
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
 class PlayerActivity : AppCompatActivity() {
 
-    private lateinit var viewModel: PlayerViewModel
+    private val track: Track? by lazy { readTrackFromIntent() }
+    private val viewModel: PlayerViewModel by viewModel {
+        parametersOf(requireNotNull(track))
+    }
+
     private var boundTrackId: Long? = null
 
     private lateinit var favoriteButton: ImageButton
@@ -71,16 +76,10 @@ class PlayerActivity : AppCompatActivity() {
             insets
         }
 
-        val track = intent.getSerializableExtra(PoiskActivity.TRACK_EXTRA) as? Track
         if (track == null) {
             finish()
             return
         }
-
-        viewModel = ViewModelProvider(
-            this,
-            Creator.providePlayerViewModelFactory(track)
-        )[PlayerViewModel::class.java]
 
         setupViews()
         setupFavoriteButton()
@@ -211,5 +210,14 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         snackbar.show()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun readTrackFromIntent(): Track? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getSerializableExtra(PoiskActivity.TRACK_EXTRA, Track::class.java)
+        } else {
+            intent.getSerializableExtra(PoiskActivity.TRACK_EXTRA) as? Track
+        }
     }
 }

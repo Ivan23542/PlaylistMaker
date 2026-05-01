@@ -8,26 +8,21 @@ import android.widget.ImageButton
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
-import androidx.lifecycle.ViewModelProvider
 import com.example.playlistmaker.R
-import com.example.playlistmaker.creator.Creator
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class NewPlaylistActivity : AppCompatActivity() {
+
+    private val viewModel: NewPlaylistViewModel by viewModel()
 
     private lateinit var nameEditText: EditText
     private lateinit var descriptionEditText: EditText
     private lateinit var createButton: Button
-    private lateinit var viewModel: NewPlaylistViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_new_playlist)
-
-        viewModel = ViewModelProvider(
-            this,
-            Creator.provideNewPlaylistViewModelFactory(applicationContext)
-        )[NewPlaylistViewModel::class.java]
 
         nameEditText = findViewById(R.id.playlistNameEditText)
         descriptionEditText = findViewById(R.id.playlistDescriptionEditText)

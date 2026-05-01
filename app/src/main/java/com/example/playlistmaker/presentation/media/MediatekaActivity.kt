@@ -9,12 +9,17 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import com.example.playlistmaker.R
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MediatekaActivity : AppCompatActivity() {
+
+    private val viewModel: MediatekaViewModel by viewModel()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_mediateka)
+        viewModel
 
         val rootView = findViewById<View>(R.id.rootView)
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
