@@ -21,15 +21,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.playlistmaker.R
-import com.example.playlistmaker.creator.Creator
 import com.example.playlistmaker.domain.model.Track
 import com.example.playlistmaker.presentation.player.PlayerActivity
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class PoiskActivity : AppCompatActivity() {
+
+    private val viewModel: SearchViewModel by viewModel()
 
     private lateinit var searchEditText: EditText
     private lateinit var clearButton: ImageView
@@ -51,7 +52,6 @@ class PoiskActivity : AppCompatActivity() {
     private lateinit var retryButton: Button
 
     private lateinit var searchProgressBar: ProgressBar
-    private lateinit var viewModel: SearchViewModel
 
     private val clickHandler = Handler(Looper.getMainLooper())
     private var isClickAllowed = true
@@ -67,11 +67,6 @@ class PoiskActivity : AppCompatActivity() {
             view.updatePadding(top = systemBars.top, bottom = systemBars.bottom)
             insets
         }
-
-        viewModel = ViewModelProvider(
-            this,
-            Creator.provideSearchViewModelFactory(applicationContext)
-        )[SearchViewModel::class.java]
 
         setupViews()
         setupBackButton()
