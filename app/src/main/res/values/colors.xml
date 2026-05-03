@@ -34,5 +34,12 @@
     <color name="snackbar_text">#FFFFFF</color>
     <color name="create_button_enabled">#3772E7</color>
     <color name="create_button_disabled">#AEAFB4</color>
+    <color name="media_tab_text_color">#1A1B22</color>
+    <color name="media_tab_indicator_color">#1A1B22</color>
+    <color name="media_primary_button_bg">#1A1B22</color>
+    <color name="media_primary_button_text">#FFFFFF</color>
+    <color name="media_placeholder_note_color">#1A1B22</color>
+    <color name="media_placeholder_face_color">#F4D35E</color>
+    <color name="media_placeholder_features_color">#1A1B22</color>
 
 </resources>
