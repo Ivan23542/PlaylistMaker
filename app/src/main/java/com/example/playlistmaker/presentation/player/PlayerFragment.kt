@@ -1,5 +1,6 @@
 package com.example.playlistmaker.presentation.player
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -8,27 +9,28 @@ import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
 import com.example.playlistmaker.domain.model.Track
 import com.example.playlistmaker.presentation.playlist.NewPlaylistActivity
-import com.example.playlistmaker.presentation.search.PoiskActivity
 import com.google.android.material.snackbar.Snackbar
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
-class PlayerActivity : AppCompatActivity() {
+class PlayerFragment : Fragment(R.layout.activity_player) {
 
-    private val track: Track? by lazy { readTrackFromIntent() }
+    private val track: Track by lazy(LazyThreadSafetyMode.NONE) {
+        requireNotNull(readTrackFromArguments())
+    }
     private val viewModel: PlayerViewModel by viewModel {
-        parametersOf(requireNotNull(track))
+        parametersOf(track)
     }
 
     private var boundTrackId: Long? = null
@@ -51,7 +53,7 @@ class PlayerActivity : AppCompatActivity() {
 
     private val newPlaylistLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
+            if (result.resultCode == Activity.RESULT_OK) {
                 val playlistName =
                     result.data?.getStringExtra(NewPlaylistActivity.PLAYLIST_NAME_EXTRA)
 
@@ -61,32 +63,23 @@ class PlayerActivity : AppCompatActivity() {
             }
         }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_player)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        val rootView = findViewById<View>(R.id.rootView)
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(view) { target, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.updatePadding(
-                top = systemBars.top,
-                bottom = systemBars.bottom
-            )
+            target.updatePadding(top = systemBars.top, bottom = systemBars.bottom)
             insets
         }
 
-        if (track == null) {
-            finish()
-            return
-        }
-
-        setupViews()
+        setupViews(view)
         setupFavoriteButton()
         setupAddToPlaylistButton()
         observeViewModel()
 
-        findViewById<ImageButton>(R.id.backButton).setOnClickListener { finish() }
+        view.findViewById<ImageButton>(R.id.backButton).setOnClickListener {
+            findNavController().navigateUp()
+        }
         playButton.setOnClickListener { viewModel.onPlayButtonClicked() }
     }
 
@@ -95,26 +88,31 @@ class PlayerActivity : AppCompatActivity() {
         viewModel.onPause()
     }
 
-    private fun setupViews() {
-        favoriteButton = findViewById(R.id.favoriteButton)
-        addToPlaylistButton = findViewById(R.id.addToPlaylistButton)
-        playButton = findViewById(R.id.playButton)
+    override fun onDestroyView() {
+        boundTrackId = null
+        super.onDestroyView()
+    }
 
-        coverImageView = findViewById(R.id.coverImageView)
-        trackNameTextView = findViewById(R.id.trackNameTextView)
-        artistNameTextView = findViewById(R.id.artistNameTextView)
-        durationValueTextView = findViewById(R.id.durationValueTextView)
-        progressTextView = findViewById(R.id.progressTextView)
-        albumTitleTextView = findViewById(R.id.albumTitleTextView)
-        albumValueTextView = findViewById(R.id.albumValueTextView)
-        yearTitleTextView = findViewById(R.id.yearTitleTextView)
-        yearValueTextView = findViewById(R.id.yearValueTextView)
-        genreValueTextView = findViewById(R.id.genreValueTextView)
-        countryValueTextView = findViewById(R.id.countryValueTextView)
+    private fun setupViews(root: View) {
+        favoriteButton = root.findViewById(R.id.favoriteButton)
+        addToPlaylistButton = root.findViewById(R.id.addToPlaylistButton)
+        playButton = root.findViewById(R.id.playButton)
+
+        coverImageView = root.findViewById(R.id.coverImageView)
+        trackNameTextView = root.findViewById(R.id.trackNameTextView)
+        artistNameTextView = root.findViewById(R.id.artistNameTextView)
+        durationValueTextView = root.findViewById(R.id.durationValueTextView)
+        progressTextView = root.findViewById(R.id.progressTextView)
+        albumTitleTextView = root.findViewById(R.id.albumTitleTextView)
+        albumValueTextView = root.findViewById(R.id.albumValueTextView)
+        yearTitleTextView = root.findViewById(R.id.yearTitleTextView)
+        yearValueTextView = root.findViewById(R.id.yearValueTextView)
+        genreValueTextView = root.findViewById(R.id.genreValueTextView)
+        countryValueTextView = root.findViewById(R.id.countryValueTextView)
     }
 
     private fun observeViewModel() {
-        viewModel.uiState.observe(this) { state ->
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
             if (boundTrackId != state.track.trackId) {
                 bindTrack(state)
                 boundTrackId = state.track.trackId
@@ -131,7 +129,7 @@ class PlayerActivity : AppCompatActivity() {
                 favoriteButton.clearColorFilter()
             } else {
                 favoriteButton.setImageResource(R.drawable.ic_favorite)
-                favoriteButton.setColorFilter(getColor(R.color.player_small_icon_color))
+                favoriteButton.setColorFilter(requireContext().getColor(R.color.player_small_icon_color))
             }
 
             state.createdPlaylistName?.let { playlistName ->
@@ -142,13 +140,13 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun bindTrack(state: PlayerUiState) {
-        val track = state.track
-        trackNameTextView.text = track.trackName
-        artistNameTextView.text = track.artistName
-        durationValueTextView.text = track.trackTime
+        val currentTrack = state.track
+        trackNameTextView.text = currentTrack.trackName
+        artistNameTextView.text = currentTrack.artistName
+        durationValueTextView.text = currentTrack.trackTime
         progressTextView.text = state.progress
-        genreValueTextView.text = track.primaryGenreName ?: ""
-        countryValueTextView.text = track.country ?: ""
+        genreValueTextView.text = currentTrack.primaryGenreName ?: ""
+        countryValueTextView.text = currentTrack.country ?: ""
 
         if (state.isAlbumVisible) {
             albumTitleTextView.visibility = View.VISIBLE
@@ -187,14 +185,14 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun setupAddToPlaylistButton() {
         addToPlaylistButton.setOnClickListener {
-            val intent = Intent(this, NewPlaylistActivity::class.java)
+            val intent = Intent(requireContext(), NewPlaylistActivity::class.java)
             newPlaylistLauncher.launch(intent)
         }
     }
 
     private fun showPlaylistCreatedSnackbar(playlistName: String) {
         val snackbar = Snackbar.make(
-            findViewById(R.id.rootView),
+            requireView(),
             getString(R.string.playlist_created_message, playlistName),
             Snackbar.LENGTH_LONG
         )
@@ -206,18 +204,23 @@ class PlayerActivity : AppCompatActivity() {
         ).apply {
             gravity = Gravity.CENTER
             textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setTextColor(getColor(R.color.snackbar_text))
+            setTextColor(requireContext().getColor(R.color.snackbar_text))
         }
 
         snackbar.show()
     }
 
     @Suppress("DEPRECATION")
-    private fun readTrackFromIntent(): Track? {
+    private fun readTrackFromArguments(): Track? {
+        val args = arguments ?: return null
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getSerializableExtra(PoiskActivity.TRACK_EXTRA, Track::class.java)
+            args.getSerializable(ARG_TRACK, Track::class.java)
         } else {
-            intent.getSerializableExtra(PoiskActivity.TRACK_EXTRA) as? Track
+            args.getSerializable(ARG_TRACK) as? Track
         }
+    }
+
+    companion object {
+        const val ARG_TRACK = "track"
     }
 }

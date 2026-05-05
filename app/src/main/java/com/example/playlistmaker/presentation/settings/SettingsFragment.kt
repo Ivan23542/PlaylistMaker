@@ -4,59 +4,47 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageButton
 import android.widget.Switch
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.fragment.app.Fragment
 import com.example.playlistmaker.R
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsFragment : Fragment(R.layout.activity_settings) {
 
     private val viewModel: SettingsViewModel by viewModel()
+
     private lateinit var themeSwitcher: Switch
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_settings)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        val rootView = findViewById<View>(R.id.rootView)
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(view) { target, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.updatePadding(
-                top = systemBars.top,
-                bottom = systemBars.bottom
-            )
+            target.updatePadding(top = systemBars.top)
             insets
         }
 
-        setupBackButton()
-        setupThemeSwitcher()
+        setupThemeSwitcher(view)
         observeViewModel()
-        setupShareButton()
-        setupSupportButton()
-        setupAgreementButton()
+        setupShareButton(view)
+        setupSupportButton(view)
+        setupAgreementButton(view)
     }
 
-    private fun setupBackButton() {
-        findViewById<ImageButton>(R.id.back).setOnClickListener { finish() }
-    }
-
-    private fun setupThemeSwitcher() {
-        themeSwitcher = findViewById(R.id.themeSwitcher)
+    private fun setupThemeSwitcher(root: View) {
+        themeSwitcher = root.findViewById(R.id.themeSwitcher)
         themeSwitcher.setOnCheckedChangeListener { _, checked ->
             viewModel.onThemeCheckedChanged(checked)
         }
     }
 
     private fun observeViewModel() {
-        viewModel.uiState.observe(this) { state ->
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
             if (themeSwitcher.isChecked != state.isDarkTheme) {
                 themeSwitcher.isChecked = state.isDarkTheme
             }
@@ -71,9 +59,9 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupShareButton() {
-        val shareIconButton = findViewById<ImageButton>(R.id.button_settings_2)
-        val shareTextView = findViewById<TextView>(R.id.button_settings_1)
+    private fun setupShareButton(root: View) {
+        val shareIconButton = root.findViewById<View>(R.id.button_settings_2)
+        val shareTextView = root.findViewById<TextView>(R.id.button_settings_1)
 
         shareIconButton.setOnClickListener { shareApp() }
         shareTextView.setOnClickListener { shareApp() }
@@ -89,14 +77,14 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val chooserIntent = Intent.createChooser(shareIntent, resources.getString(R.string.shareApp))
-        if (shareIntent.resolveActivity(packageManager) != null) {
+        if (shareIntent.resolveActivity(requireContext().packageManager) != null) {
             startActivity(chooserIntent)
         }
     }
 
-    private fun setupSupportButton() {
-        val supportIconButton = findViewById<ImageButton>(R.id.support_2)
-        val supportTextView = findViewById<TextView>(R.id.support_1)
+    private fun setupSupportButton(root: View) {
+        val supportIconButton = root.findViewById<View>(R.id.support_2)
+        val supportTextView = root.findViewById<TextView>(R.id.support_1)
 
         supportIconButton.setOnClickListener { sendSupportEmail() }
         supportTextView.setOnClickListener { sendSupportEmail() }
@@ -116,18 +104,18 @@ class SettingsActivity : AppCompatActivity() {
         startActivity(emailIntent)
     }
 
-    private fun setupAgreementButton() {
-        val agreementIconButton = findViewById<ImageButton>(R.id.agreement_icon)
-        val agreementTextView = findViewById<TextView>(R.id.agreement_text)
+    private fun setupAgreementButton(root: View) {
+        val agreementIconButton = root.findViewById<View>(R.id.agreement_icon)
+        val agreementTextView = root.findViewById<TextView>(R.id.agreement_text)
 
         agreementIconButton.setOnClickListener { openUserAgreement() }
         agreementTextView.setOnClickListener { openUserAgreement() }
     }
 
     private fun openUserAgreement() {
-        val agreementURL = resources.getString(R.string.agreementUrl)
+        val agreementUrl = resources.getString(R.string.agreementUrl)
         val browserIntent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse(agreementURL)
+            data = Uri.parse(agreementUrl)
         }
         startActivity(browserIntent)
     }

@@ -1,14 +1,13 @@
 package com.example.playlistmaker.presentation.media
 
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.playlistmaker.presentation.media.favorites.FavoriteTracksFragment
 import com.example.playlistmaker.presentation.media.playlists.PlaylistsFragment
 
 class MediatekaPagerAdapter(
-    activity: AppCompatActivity
-) : FragmentStateAdapter(activity) {
+    fragment: Fragment
+) : FragmentStateAdapter(fragment) {
 
     override fun getItemCount(): Int = TAB_COUNT
 

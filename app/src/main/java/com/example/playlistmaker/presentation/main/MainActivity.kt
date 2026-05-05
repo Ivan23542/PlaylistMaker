@@ -1,17 +1,16 @@
 package com.example.playlistmaker.presentation.main
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.playlistmaker.presentation.media.MediatekaActivity
-import com.example.playlistmaker.presentation.search.PoiskActivity
+import androidx.core.view.updatePadding
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
 import com.example.playlistmaker.R
-import com.example.playlistmaker.presentation.settings.SettingsActivity
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
@@ -24,37 +23,33 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         viewModel
 
-        val contentContainer = findViewById<View>(R.id.contentContainer)
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+        val bottomNavigationDivider = findViewById<View>(R.id.bottomNavigationDivider)
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+        val navController = navHostFragment.navController
+        val topLevelDestinations = setOf(
+            R.id.searchFragment,
+            R.id.mediatekaFragment,
+            R.id.settingsFragment
+        )
 
-        val startPadding = contentContainer.paddingStart
-        val topPadding = contentContainer.paddingTop
-        val endPadding = contentContainer.paddingEnd
-        val bottomPadding = contentContainer.paddingBottom
-
-        ViewCompat.setOnApplyWindowInsetsListener(contentContainer) { view, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(
-                startPadding,
-                topPadding + systemBars.top,
-                endPadding,
-                bottomPadding + systemBars.bottom
-            )
+            view.updatePadding(bottom = systemBars.bottom)
             insets
         }
 
-        val button = findViewById<Button>(R.id.poisk)
-        button.setOnClickListener {
-            startActivity(Intent(this, PoiskActivity::class.java))
-        }
+        bottomNavigationView.setupWithNavController(navController)
 
-        val button2 = findViewById<Button>(R.id.mediateka)
-        button2.setOnClickListener {
-            startActivity(Intent(this, MediatekaActivity::class.java))
-        }
-
-        val button3 = findViewById<Button>(R.id.nastroiki)
-        button3.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            val navigationVisibility = if (destination.id in topLevelDestinations) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+            bottomNavigationView.visibility = navigationVisibility
+            bottomNavigationDivider.visibility = navigationVisibility
         }
     }
 }

@@ -17,30 +17,13 @@
 
         <activity
             android:name=".presentation.main.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:windowSoftInputMode="stateHidden|adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name=".presentation.search.PoiskActivity"
-            android:exported="false"
-            android:windowSoftInputMode="stateHidden|adjustResize"
-            android:supportsPictureInPicture="false" />
-
-        <activity
-            android:name=".presentation.media.MediatekaActivity"
-            android:exported="false"/>
-
-        <activity
-            android:name=".presentation.settings.SettingsActivity"
-            android:exported="false"/>
-
-        <activity
-            android:name=".presentation.player.PlayerActivity"
-            android:exported="false" />
 
         <activity
             android:name=".presentation.playlist.NewPlaylistActivity"

@@ -1,6 +1,5 @@
 package com.example.playlistmaker.presentation.search
 
-import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -12,23 +11,23 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.playlistmaker.R
 import com.example.playlistmaker.domain.model.Track
-import com.example.playlistmaker.presentation.player.PlayerActivity
+import com.example.playlistmaker.presentation.player.PlayerFragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class PoiskActivity : AppCompatActivity() {
+class SearchFragment : Fragment(R.layout.activity_poisk) {
 
     private val viewModel: SearchViewModel by viewModel()
 
@@ -56,20 +55,16 @@ class PoiskActivity : AppCompatActivity() {
     private val clickHandler = Handler(Looper.getMainLooper())
     private var isClickAllowed = true
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_poisk)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        val rootView = findViewById<View>(R.id.rootView)
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(view) { target, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.updatePadding(top = systemBars.top, bottom = systemBars.bottom)
+            target.updatePadding(top = systemBars.top)
             insets
         }
 
-        setupViews()
-        setupBackButton()
+        setupViews(view)
         setupRecyclerViews()
         observeViewModel()
         setupSearchLogic()
@@ -82,30 +77,28 @@ class PoiskActivity : AppCompatActivity() {
         viewModel.refreshHistory()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
         clickHandler.removeCallbacksAndMessages(null)
+        tracksRecyclerView.adapter = null
+        historyRecyclerView.adapter = null
+        super.onDestroyView()
     }
 
-    private fun setupViews() {
-        searchEditText = findViewById(R.id.search_edit_text)
-        clearButton = findViewById(R.id.crest)
-        searchIcon = findViewById(R.id.search_icon)
-        searchFieldContainer = findViewById(R.id.search_field_container)
-        tracksRecyclerView = findViewById(R.id.tracksRecyclerView)
-        historyContainer = findViewById(R.id.historyContainer)
-        historyRecyclerView = findViewById(R.id.historyRecyclerView)
-        clearHistoryButton = findViewById(R.id.clearHistoryButton)
-        placeholderContainer = findViewById(R.id.placeholderContainer)
-        placeholderImage = findViewById(R.id.placeholderImage)
-        placeholderText = findViewById(R.id.placeholderText)
-        placeholderSubtext = findViewById(R.id.placeholderSubtext)
-        retryButton = findViewById(R.id.retryButton)
-        searchProgressBar = findViewById(R.id.searchProgressBar)
-    }
-
-    private fun setupBackButton() {
-        findViewById<ImageButton>(R.id.backButton).setOnClickListener { finish() }
+    private fun setupViews(root: View) {
+        searchEditText = root.findViewById(R.id.search_edit_text)
+        clearButton = root.findViewById(R.id.crest)
+        searchIcon = root.findViewById(R.id.search_icon)
+        searchFieldContainer = root.findViewById(R.id.search_field_container)
+        tracksRecyclerView = root.findViewById(R.id.tracksRecyclerView)
+        historyContainer = root.findViewById(R.id.historyContainer)
+        historyRecyclerView = root.findViewById(R.id.historyRecyclerView)
+        clearHistoryButton = root.findViewById(R.id.clearHistoryButton)
+        placeholderContainer = root.findViewById(R.id.placeholderContainer)
+        placeholderImage = root.findViewById(R.id.placeholderImage)
+        placeholderText = root.findViewById(R.id.placeholderText)
+        placeholderSubtext = root.findViewById(R.id.placeholderSubtext)
+        retryButton = root.findViewById(R.id.retryButton)
+        searchProgressBar = root.findViewById(R.id.searchProgressBar)
     }
 
     private fun setupRecyclerViews() {
@@ -123,17 +116,17 @@ class PoiskActivity : AppCompatActivity() {
             }
         }
 
-        tracksRecyclerView.layoutManager = LinearLayoutManager(this)
+        tracksRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         tracksRecyclerView.adapter = trackAdapter
         tracksRecyclerView.visibility = View.GONE
 
-        historyRecyclerView.layoutManager = LinearLayoutManager(this)
+        historyRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         historyRecyclerView.adapter = historyAdapter
         historyContainer.visibility = View.GONE
     }
 
     private fun observeViewModel() {
-        viewModel.uiState.observe(this) { state ->
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
             if (searchEditText.text.toString() != state.searchText) {
                 searchEditText.setText(state.searchText)
                 searchEditText.setSelection(state.searchText.length)
@@ -154,7 +147,12 @@ class PoiskActivity : AppCompatActivity() {
 
     private fun setupSearchLogic() {
         searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun beforeTextChanged(
+                s: CharSequence?,
+                start: Int,
+                count: Int,
+                after: Int
+            ) = Unit
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 viewModel.onSearchTextChanged(s?.toString().orEmpty())
@@ -165,7 +163,8 @@ class PoiskActivity : AppCompatActivity() {
 
         searchEditText.setOnEditorActionListener { _, actionId, event ->
             val isDoneAction = actionId == EditorInfo.IME_ACTION_DONE
-            val isEnterKey = event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN
+            val isEnterKey =
+                event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN
 
             if (isDoneAction || isEnterKey) {
                 viewModel.onSearchSubmitted()
@@ -212,9 +211,10 @@ class PoiskActivity : AppCompatActivity() {
     }
 
     private fun openPlayer(track: Track) {
-        val intent = Intent(this, PlayerActivity::class.java)
-        intent.putExtra(TRACK_EXTRA, track)
-        startActivity(intent)
+        findNavController().navigate(
+            R.id.action_searchFragment_to_playerFragment,
+            bundleOf(PlayerFragment.ARG_TRACK to track)
+        )
     }
 
     private fun showLoading() {
@@ -287,17 +287,16 @@ class PoiskActivity : AppCompatActivity() {
     }
 
     private fun showKeyboard() {
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(searchEditText, InputMethodManager.SHOW_IMPLICIT)
+        val imm = requireContext().getSystemService(InputMethodManager::class.java)
+        imm?.showSoftInput(searchEditText, InputMethodManager.SHOW_IMPLICIT)
     }
 
     private fun hideKeyboard() {
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(searchEditText.windowToken, 0)
+        val imm = requireContext().getSystemService(InputMethodManager::class.java)
+        imm?.hideSoftInputFromWindow(searchEditText.windowToken, 0)
     }
 
-    companion object {
-        const val TRACK_EXTRA = "track_extra"
+    private companion object {
         private const val CLICK_DEBOUNCE_DELAY = 1000L
     }
 }
