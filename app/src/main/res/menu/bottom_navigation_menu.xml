@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/searchFragment"
+        android:icon="@drawable/lupa"
+        android:title="@string/search" />
+
+    <item
+        android:id="@+id/mediatekaFragment"
+        android:icon="@drawable/mediateka"
+        android:title="@string/mediateka" />
+
+    <item
+        android:id="@+id/settingsFragment"
+        android:icon="@drawable/nastroiki"
+        android:title="@string/button_3" />
+
+</menu>
