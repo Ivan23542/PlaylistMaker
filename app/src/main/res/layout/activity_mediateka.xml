@@ -6,37 +6,28 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/screen_background"
-    tools:context=".presentation.media.MediatekaActivity">
-
-    <ImageButton
-        android:id="@+id/strelka_Mediateka"
-        style="@style/ImageButtonSetting"
-        android:layout_marginStart="0dp"
-        android:layout_marginTop="8dp"
-        android:src="@drawable/strelka"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    tools:context=".presentation.media.MediatekaFragment">
 
     <TextView
         android:id="@+id/mediaTitleTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="-4dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="14dp"
         android:layout_marginEnd="16dp"
         android:text="@string/mediateka"
         android:textColor="@color/track_name_color"
         android:textSize="22sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/strelka_Mediateka"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/strelka_Mediateka"
-        app:layout_constraintTop_toTopOf="@id/strelka_Mediateka" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/mediaTabLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="24dp"
         android:background="@color/screen_background"
         app:tabGravity="fill"
         app:tabIndicatorColor="@color/media_tab_indicator_color"
@@ -49,7 +40,7 @@
         app:tabTextColor="@color/media_tab_text_color"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/strelka_Mediateka" />
+        app:layout_constraintTop_toBottomOf="@id/mediaTitleTextView" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/mediaViewPager"

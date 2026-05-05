@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/screen_background"
     android:orientation="vertical"
-    tools:context=".PoiskActivity">
+    tools:context=".presentation.search.SearchFragment">
 
     <View
         android:layout_width="0dp"
@@ -15,28 +15,23 @@
         android:focusable="true"
         android:focusableInTouchMode="true" />
 
-    <LinearLayout
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/backButton"
-            style="@style/ImageButtonSetting"
-            android:src="@drawable/strelka" />
-
-        <TextView
-            style="@style/textnastroiki"
-            android:layout_marginTop="6dp"
-            android:text="@string/search" />
-    </LinearLayout>
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/search"
+        android:textColor="@color/track_name_color"
+        android:textSize="22sp"
+        android:textStyle="bold" />
 
     <FrameLayout
         android:id="@+id/search_field_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="16dp">
 
         <ImageView
