@@ -81,6 +81,8 @@ class SearchFragment : Fragment(R.layout.activity_poisk) {
 
     override fun onDestroyView() {
         clickDebounceJob?.cancel()
+        clickDebounceJob = null
+        isClickAllowed = true
         tracksRecyclerView.adapter = null
         historyRecyclerView.adapter = null
         super.onDestroyView()
@@ -208,7 +210,7 @@ class SearchFragment : Fragment(R.layout.activity_poisk) {
 
         isClickAllowed = false
         clickDebounceJob?.cancel()
-        clickDebounceJob = viewLifecycleOwner.lifecycleScope.launch {
+        clickDebounceJob = lifecycleScope.launch {
             delay(CLICK_DEBOUNCE_DELAY)
             isClickAllowed = true
         }
