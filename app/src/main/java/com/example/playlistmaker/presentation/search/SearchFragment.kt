@@ -1,8 +1,6 @@
 package com.example.playlistmaker.presentation.search
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.KeyEvent
@@ -19,12 +17,16 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.playlistmaker.R
 import com.example.playlistmaker.domain.model.Track
 import com.example.playlistmaker.presentation.player.PlayerFragment
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class SearchFragment : Fragment(R.layout.activity_poisk) {
@@ -52,7 +54,7 @@ class SearchFragment : Fragment(R.layout.activity_poisk) {
 
     private lateinit var searchProgressBar: ProgressBar
 
-    private val clickHandler = Handler(Looper.getMainLooper())
+    private var clickDebounceJob: Job? = null
     private var isClickAllowed = true
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -78,7 +80,7 @@ class SearchFragment : Fragment(R.layout.activity_poisk) {
     }
 
     override fun onDestroyView() {
-        clickHandler.removeCallbacksAndMessages(null)
+        clickDebounceJob?.cancel()
         tracksRecyclerView.adapter = null
         historyRecyclerView.adapter = null
         super.onDestroyView()
@@ -202,12 +204,15 @@ class SearchFragment : Fragment(R.layout.activity_poisk) {
     }
 
     private fun clickDebounce(): Boolean {
-        val current = isClickAllowed
-        if (isClickAllowed) {
-            isClickAllowed = false
-            clickHandler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
+        if (!isClickAllowed) return false
+
+        isClickAllowed = false
+        clickDebounceJob?.cancel()
+        clickDebounceJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(CLICK_DEBOUNCE_DELAY)
+            isClickAllowed = true
         }
-        return current
+        return true
     }
 
     private fun openPlayer(track: Track) {
