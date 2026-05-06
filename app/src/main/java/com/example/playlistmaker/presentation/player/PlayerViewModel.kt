@@ -1,12 +1,15 @@
 package com.example.playlistmaker.presentation.player
 
-import android.os.Handler
-import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.playlistmaker.domain.interactor.PlayerInteractor
 import com.example.playlistmaker.domain.model.Track
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -22,20 +25,11 @@ class PlayerViewModel(
         PAUSED
     }
 
-    private val handler = Handler(Looper.getMainLooper())
     private val _uiState = MutableLiveData(PlayerUiState(track = track))
     val uiState: LiveData<PlayerUiState> = _uiState
 
     private var playerState = PlayerState.DEFAULT
-
-    private val progressRunnable = object : Runnable {
-        override fun run() {
-            updateState {
-                copy(progress = formatTime(playerInteractor.getCurrentPosition()))
-            }
-            handler.postDelayed(this, PROGRESS_DELAY)
-        }
-    }
+    private var progressJob: Job? = null
 
     init {
         preparePlayer()
@@ -147,11 +141,19 @@ class PlayerViewModel(
 
     private fun startProgressUpdates() {
         stopProgressUpdates()
-        handler.post(progressRunnable)
+        progressJob = viewModelScope.launch {
+            while (isActive && playerState == PlayerState.PLAYING) {
+                updateState {
+                    copy(progress = formatTime(playerInteractor.getCurrentPosition()))
+                }
+                delay(PROGRESS_DELAY)
+            }
+        }
     }
 
     private fun stopProgressUpdates() {
-        handler.removeCallbacks(progressRunnable)
+        progressJob?.cancel()
+        progressJob = null
     }
 
     private fun updateState(update: PlayerUiState.() -> PlayerUiState) {

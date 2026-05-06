@@ -1,27 +1,29 @@
 package com.example.playlistmaker.presentation.search
 
-import android.os.Handler
-import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.playlistmaker.domain.interactor.SearchHistoryInteractor
 import com.example.playlistmaker.domain.interactor.TracksInteractor
 import com.example.playlistmaker.domain.model.Track
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
 
 class SearchViewModel(
     private val tracksInteractor: TracksInteractor,
     private val searchHistoryInteractor: SearchHistoryInteractor
 ) : ViewModel() {
 
-    private val handler = Handler(Looper.getMainLooper())
-    private val searchRunnable = Runnable { executeSearch() }
-
     private val _uiState = MutableLiveData(SearchUiState())
     val uiState: LiveData<SearchUiState> = _uiState
 
     private var hasSearchFocus = false
     private var lastSearchQuery = ""
+    private var searchDebounceJob: Job? = null
+    private var searchJob: Job? = null
 
     fun onSearchTextChanged(text: String) {
         updateState {
@@ -31,18 +33,22 @@ class SearchViewModel(
             )
         }
 
-        handler.removeCallbacks(searchRunnable)
+        searchDebounceJob?.cancel()
 
         if (text.isBlank()) {
+            searchJob?.cancel()
             showHistoryOrIdle()
         } else {
             updateContentState(SearchContentState.Idle)
-            handler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
+            searchDebounceJob = viewModelScope.launch {
+                delay(SEARCH_DEBOUNCE_DELAY)
+                executeSearch()
+            }
         }
     }
 
     fun onSearchSubmitted() {
-        handler.removeCallbacks(searchRunnable)
+        searchDebounceJob?.cancel()
         executeSearch()
     }
 
@@ -57,7 +63,8 @@ class SearchViewModel(
     }
 
     fun onClearClicked() {
-        handler.removeCallbacks(searchRunnable)
+        searchDebounceJob?.cancel()
+        searchJob?.cancel()
         updateState {
             copy(
                 searchText = "",
@@ -69,10 +76,9 @@ class SearchViewModel(
 
     fun onRetryClicked() {
         val currentQuery = _uiState.value?.searchText?.trim().orEmpty()
-        if (currentQuery.isNotEmpty()) {
-            executeSearch(currentQuery)
-        } else if (lastSearchQuery.isNotBlank()) {
-            executeSearch(lastSearchQuery)
+        when {
+            currentQuery.isNotEmpty() -> executeSearch(currentQuery)
+            lastSearchQuery.isNotBlank() -> executeSearch(lastSearchQuery)
         }
     }
 
@@ -94,11 +100,6 @@ class SearchViewModel(
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        handler.removeCallbacks(searchRunnable)
-    }
-
     private fun executeSearch(query: String = _uiState.value?.searchText?.trim().orEmpty()) {
         if (query.isBlank()) {
             showHistoryOrIdle()
@@ -106,23 +107,28 @@ class SearchViewModel(
         }
 
         lastSearchQuery = query
-        updateContentState(SearchContentState.Loading)
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            updateContentState(SearchContentState.Loading)
 
-        tracksInteractor.searchTracks(query, object : TracksInteractor.TracksConsumer {
-            override fun consume(foundTracks: List<Track>?, errorMessage: String?) {
-                if (query != _uiState.value?.searchText?.trim()) {
-                    return
+            tracksInteractor.searchTracks(query)
+                .catch {
+                    if (query == _uiState.value?.searchText?.trim()) {
+                        updateContentState(SearchContentState.ConnectionError)
+                    }
                 }
+                .collect { foundTracks ->
+                    if (query != _uiState.value?.searchText?.trim()) return@collect
 
-                val contentState = when {
-                    errorMessage != null -> SearchContentState.ConnectionError
-                    foundTracks.isNullOrEmpty() -> SearchContentState.NothingFound
-                    else -> SearchContentState.SearchResults(foundTracks)
+                    val contentState = if (foundTracks.isEmpty()) {
+                        SearchContentState.NothingFound
+                    } else {
+                        SearchContentState.SearchResults(foundTracks)
+                    }
+
+                    updateContentState(contentState)
                 }
-
-                updateContentState(contentState)
-            }
-        })
+        }
     }
 
     private fun showHistoryOrIdle() {
