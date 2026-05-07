@@ -4,17 +4,20 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.playlistmaker.domain.interactor.FavoriteTracksInteractor
 import com.example.playlistmaker.domain.interactor.SearchHistoryInteractor
 import com.example.playlistmaker.domain.interactor.TracksInteractor
 import com.example.playlistmaker.domain.model.Track
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class SearchViewModel(
     private val tracksInteractor: TracksInteractor,
-    private val searchHistoryInteractor: SearchHistoryInteractor
+    private val searchHistoryInteractor: SearchHistoryInteractor,
+    private val favoriteTracksInteractor: FavoriteTracksInteractor
 ) : ViewModel() {
 
     private val _uiState = MutableLiveData(SearchUiState())
@@ -24,6 +27,7 @@ class SearchViewModel(
     private var lastSearchQuery = ""
     private var searchDebounceJob: Job? = null
     private var searchJob: Job? = null
+    private var historyJob: Job? = null
 
     fun onSearchTextChanged(text: String) {
         updateState {
@@ -132,13 +136,29 @@ class SearchViewModel(
     }
 
     private fun showHistoryOrIdle() {
-        val historyTracks = searchHistoryInteractor.read()
-        val contentState = if (hasSearchFocus && historyTracks.isNotEmpty()) {
-            SearchContentState.History(historyTracks)
-        } else {
-            SearchContentState.Idle
+        historyJob?.cancel()
+        historyJob = viewModelScope.launch {
+            val historyTracks = searchHistoryInteractor.read()
+            val favoriteTrackIds = favoriteTracksInteractor.getFavoriteTracks()
+                .first()
+                .map { it.trackId }
+                .toHashSet()
+
+            historyTracks.forEach { track ->
+                track.isFavorite = track.trackId in favoriteTrackIds
+            }
+
+            val shouldShowHistory =
+                hasSearchFocus && _uiState.value?.searchText.isNullOrBlank() == true &&
+                    historyTracks.isNotEmpty()
+
+            val contentState = if (shouldShowHistory) {
+                SearchContentState.History(historyTracks)
+            } else {
+                SearchContentState.Idle
+            }
+            updateContentState(contentState)
         }
-        updateContentState(contentState)
     }
 
     private fun updateContentState(contentState: SearchContentState) {

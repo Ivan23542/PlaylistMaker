@@ -17,7 +17,12 @@
     <fragment
         android:id="@+id/mediatekaFragment"
         android:name="com.example.playlistmaker.presentation.media.MediatekaFragment"
-        android:label="@string/mediateka" />
+        android:label="@string/mediateka">
+
+        <action
+            android:id="@+id/action_mediatekaFragment_to_playerFragment"
+            app:destination="@id/playerFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/settingsFragment"
