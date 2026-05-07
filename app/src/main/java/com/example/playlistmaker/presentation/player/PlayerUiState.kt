@@ -7,7 +7,7 @@ data class PlayerUiState(
     val progress: String = START_PROGRESS,
     val isPlayButtonEnabled: Boolean = false,
     val isPlaying: Boolean = false,
-    val isFavorite: Boolean = false,
+    val isFavorite: Boolean = track.isFavorite,
     val createdPlaylistName: String? = null,
     val artworkUrl: String = track.artworkUrl100.replaceAfterLast("/", "512x512bb.jpg"),
     val album: String = track.collectionName.orEmpty(),

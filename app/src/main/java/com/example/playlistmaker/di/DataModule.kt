@@ -3,6 +3,8 @@ package com.example.playlistmaker.di
 import android.content.Context
 import android.content.SharedPreferences
 import android.media.MediaPlayer
+import androidx.room.Room
+import com.example.playlistmaker.data.db.AppDatabase
 import com.example.playlistmaker.data.network.ITunesApi
 import com.example.playlistmaker.data.storage.PlaylistStorage
 import com.google.gson.Gson
@@ -13,6 +15,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 private const val ITUNES_BASE_URL = "https://itunes.apple.com/"
 private const val PREFS_NAME = "playlist_maker_prefs"
+private const val DATABASE_NAME = "playlist_maker_database"
 
 val dataModule = module {
 
@@ -31,6 +34,14 @@ val dataModule = module {
     single { Gson() }
 
     single { PlaylistStorage(get(), get()) }
+
+    single<AppDatabase> {
+        Room.databaseBuilder(
+            androidContext(),
+            AppDatabase::class.java,
+            DATABASE_NAME
+        ).build()
+    }
 
     factory { MediaPlayer() }
 }

@@ -18,17 +18,17 @@ val viewModelModule = module {
 
     viewModel { MediatekaViewModel() }
 
-    viewModel { FavoriteTracksViewModel() }
+    viewModel { FavoriteTracksViewModel(get()) }
 
     viewModel { PlaylistsViewModel() }
 
-    viewModel { SearchViewModel(get(), get()) }
+    viewModel { SearchViewModel(get(), get(), get()) }
 
     viewModel { SettingsViewModel(get()) }
 
     viewModel { NewPlaylistViewModel(get()) }
 
     viewModel { (track: Track) ->
-        PlayerViewModel(track, get())
+        PlayerViewModel(track, get(), get())
     }
 }

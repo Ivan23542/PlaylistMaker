@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.playlistmaker.domain.interactor.FavoriteTracksInteractor
 import com.example.playlistmaker.domain.interactor.PlayerInteractor
 import com.example.playlistmaker.domain.model.Track
 import kotlinx.coroutines.Job
@@ -15,7 +16,8 @@ import java.util.Locale
 
 class PlayerViewModel(
     track: Track,
-    private val playerInteractor: PlayerInteractor
+    private val playerInteractor: PlayerInteractor,
+    private val favoriteTracksInteractor: FavoriteTracksInteractor
 ) : ViewModel() {
 
     private enum class PlayerState {
@@ -32,6 +34,7 @@ class PlayerViewModel(
     private var progressJob: Job? = null
 
     init {
+        observeFavoriteState()
         preparePlayer()
     }
 
@@ -44,7 +47,19 @@ class PlayerViewModel(
     }
 
     fun onFavoriteClicked() {
-        updateState { copy(isFavorite = !isFavorite) }
+        viewModelScope.launch {
+            val currentState = _uiState.value ?: return@launch
+            val updatedIsFavorite = !currentState.isFavorite
+
+            if (currentState.isFavorite) {
+                favoriteTracksInteractor.removeTrack(currentState.track)
+            } else {
+                favoriteTracksInteractor.addTrack(currentState.track)
+            }
+
+            currentState.track.isFavorite = updatedIsFavorite
+            updateState { copy(isFavorite = updatedIsFavorite) }
+        }
     }
 
     fun onPause() {
@@ -65,6 +80,17 @@ class PlayerViewModel(
         super.onCleared()
         stopProgressUpdates()
         playerInteractor.release()
+    }
+
+    private fun observeFavoriteState() {
+        viewModelScope.launch {
+            val currentTrack = _uiState.value?.track ?: return@launch
+            favoriteTracksInteractor.getFavoriteTracks().collect { favoriteTracks ->
+                val isFavorite = favoriteTracks.any { it.trackId == currentTrack.trackId }
+                currentTrack.isFavorite = isFavorite
+                updateState { copy(isFavorite = isFavorite) }
+            }
+        }
     }
 
     private fun preparePlayer() {
