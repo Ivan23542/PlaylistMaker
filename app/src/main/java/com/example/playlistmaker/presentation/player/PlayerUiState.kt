@@ -8,7 +8,6 @@ data class PlayerUiState(
     val isPlayButtonEnabled: Boolean = false,
     val isPlaying: Boolean = false,
     val isFavorite: Boolean = track.isFavorite,
-    val createdPlaylistName: String? = null,
     val artworkUrl: String = track.artworkUrl100.replaceAfterLast("/", "512x512bb.jpg"),
     val album: String = track.collectionName.orEmpty(),
     val isAlbumVisible: Boolean = !track.collectionName.isNullOrBlank(),

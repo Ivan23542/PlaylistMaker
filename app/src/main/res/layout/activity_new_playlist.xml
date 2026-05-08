@@ -6,8 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/screen_background"
-    android:paddingBottom="24dp"
-    tools:context=".NewPlaylistActivity">
+    android:paddingBottom="0dp"
+    tools:context=".presentation.playlist.NewPlaylistFragment">
 
     <ImageButton
         android:id="@+id/backButton"
@@ -41,17 +41,21 @@
         android:layout_marginTop="32dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/playlist_image_placeholder_bg"
+        android:foreground="?attr/selectableItemBackground"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/backButton">
 
-        <ImageView
-            android:id="@+id/addImageIcon"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_gravity="center"
-            app:tint="@color/player_small_icon_color" />
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/coverImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/playlist_cover"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            app:shapeAppearanceOverlay="@style/PlaylistCoverShape"
+            tools:src="@drawable/placeholder" />
 
     </FrameLayout>
 
@@ -109,6 +113,7 @@
         android:layout_height="56dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
+        android:layout_marginBottom="32dp"
         android:background="@drawable/create_playlist_button_bg"
         android:backgroundTint="@null"
         android:enabled="false"

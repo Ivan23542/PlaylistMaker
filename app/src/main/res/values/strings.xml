@@ -38,9 +38,21 @@
     <string name="playlist_name_required">&#1053;&#1072;&#1079;&#1074;&#1072;&#1085;&#1080;&#1077;*</string>
     <string name="playlist_description">&#1054;&#1087;&#1080;&#1089;&#1072;&#1085;&#1080;&#1077;</string>
     <string name="create">&#1057;&#1086;&#1079;&#1076;&#1072;&#1090;&#1100;</string>
-    <string name="playlist_created_message">&#1055;&#1083;&#1077;&#1081;&#1083;&#1080;&#1089;&#1090; &#171;%1$s&#187; &#1089;&#1086;&#1079;&#1076;&#1072;&#1085;</string>
+    <string name="playlist_created_message">&#1055;&#1083;&#1077;&#1081;&#1083;&#1080;&#1089;&#1090; %1$s &#1089;&#1086;&#1079;&#1076;&#1072;&#1085;</string>
     <string name="favorite_tracks_tab">&#1048;&#1079;&#1073;&#1088;&#1072;&#1085;&#1085;&#1099;&#1077; &#1090;&#1088;&#1077;&#1082;&#1080;</string>
     <string name="playlists_tab">&#1055;&#1083;&#1077;&#1081;&#1083;&#1080;&#1089;&#1090;&#1099;</string>
     <string name="empty_favorite_tracks">&#1042;&#1072;&#1096;&#1072; &#1084;&#1077;&#1076;&#1080;&#1072;&#1090;&#1077;&#1082;&#1072; &#1087;&#1091;&#1089;&#1090;&#1072;</string>
     <string name="empty_playlists">&#1042;&#1099; &#1085;&#1077; &#1089;&#1086;&#1079;&#1076;&#1072;&#1083;&#1080; &#1085;&#1080; &#1086;&#1076;&#1085;&#1086;&#1075;&#1086; &#1087;&#1083;&#1077;&#1081;&#1083;&#1080;&#1089;&#1090;&#1072;</string>
+    <string name="playlist_cover">Обложка плейлиста</string>
+    <string name="finish_playlist_creation_title">Завершить создание плейлиста?</string>
+    <string name="finish_playlist_creation_message">Все несохраненные данные будут потеряны</string>
+    <string name="cancel_dialog">Отмена</string>
+    <string name="finish_dialog">Завершить</string>
+    <string name="playlists_bottom_sheet_title">Добавить в плейлист</string>
+    <string name="track_added_to_playlist_message">Добавлено в плейлист %1$s</string>
+    <string name="track_already_added_to_playlist_message">Трек уже добавлен в плейлист %1$s</string>
+    <string name="playlist_tracks_count_format">%1$d %2$s</string>
+    <string name="track_word_single">трек</string>
+    <string name="track_word_few">трека</string>
+    <string name="track_word_many">треков</string>
 </resources>
