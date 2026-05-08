@@ -2,4 +2,11 @@
 <resources>
     <dimen name="track_artwork_corner_radius">8dp</dimen>
     <dimen name="playlists_grid_spacing">8dp</dimen>
+    <dimen name="playlist_grid_text_line_height">14dp</dimen>
+    <dimen name="playlist_created_snackbar_height">48dp</dimen>
+    <dimen name="playlist_created_snackbar_margin_start">7dp</dimen>
+    <dimen name="playlist_created_snackbar_margin_end">8dp</dimen>
+    <dimen name="playlist_created_snackbar_margin_bottom">16dp</dimen>
+    <dimen name="playlist_created_snackbar_padding_start">16dp</dimen>
+    <dimen name="playlist_created_snackbar_padding_end">8dp</dimen>
 </resources>

@@ -1,14 +1,20 @@
 package com.example.playlistmaker.presentation.media.playlists
 
 import android.os.Bundle
+import android.graphics.drawable.GradientDrawable
+import android.view.Gravity
 import android.view.View
-import android.widget.Toast
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.playlistmaker.R
 import com.example.playlistmaker.presentation.playlist.NewPlaylistFragment
+import com.google.android.material.snackbar.Snackbar
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class PlaylistsFragment : Fragment(R.layout.fragment_playlists) {
@@ -52,11 +58,7 @@ class PlaylistsFragment : Fragment(R.layout.fragment_playlists) {
             ?.savedStateHandle
             ?.getLiveData<String>(NewPlaylistFragment.RESULT_PLAYLIST_CREATED)
             ?.observe(viewLifecycleOwner) { playlistName ->
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.playlist_created_message, playlistName),
-                    Toast.LENGTH_SHORT
-                ).show()
+                showPlaylistCreatedSnackbar(playlistName)
                 findNavController().currentBackStackEntry
                     ?.savedStateHandle
                     ?.remove<String>(NewPlaylistFragment.RESULT_PLAYLIST_CREATED)
@@ -78,6 +80,58 @@ class PlaylistsFragment : Fragment(R.layout.fragment_playlists) {
         emptyStateContainer.visibility = View.GONE
         playlistsRecyclerView.visibility = View.VISIBLE
         playlistsAdapter.updatePlaylists(playlists)
+    }
+
+    private fun showPlaylistCreatedSnackbar(playlistName: String) {
+        val snackbar = Snackbar.make(
+            requireActivity().findViewById(android.R.id.content),
+            getString(R.string.playlist_created_message, playlistName),
+            Snackbar.LENGTH_SHORT
+        )
+
+        val snackbarView = snackbar.view
+        val snackbarHeight = resources.getDimensionPixelSize(R.dimen.playlist_created_snackbar_height)
+        val background = GradientDrawable().apply {
+            setColor(ContextCompat.getColor(requireContext(), R.color.snackbar_bg))
+            cornerRadius = 0f
+        }
+
+        snackbarView.background = background
+        snackbarView.minimumHeight = snackbarHeight
+        snackbarView.setPadding(0, 0, 0, 0)
+
+        val textView = snackbarView.findViewById<TextView>(com.google.android.material.R.id.snackbar_text)
+        textView.gravity = Gravity.CENTER
+        textView.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        textView.maxLines = 1
+        textView.setTextColor(ContextCompat.getColor(requireContext(), R.color.snackbar_text))
+        textView.textSize = 14f
+        textView.typeface = ResourcesCompat.getFont(requireContext(), R.font.ys_display_regular)
+
+        (textView.parent as? ViewGroup)?.apply {
+            minimumHeight = snackbarHeight
+            setPadding(
+                resources.getDimensionPixelSize(R.dimen.playlist_created_snackbar_padding_start),
+                0,
+                resources.getDimensionPixelSize(R.dimen.playlist_created_snackbar_padding_end),
+                0
+            )
+        }
+
+        snackbar.show()
+        snackbarView.post {
+            val parentWidth = (snackbarView.parent as? View)?.width ?: resources.displayMetrics.widthPixels
+            val marginStart = resources.getDimensionPixelSize(R.dimen.playlist_created_snackbar_margin_start)
+            val marginEnd = resources.getDimensionPixelSize(R.dimen.playlist_created_snackbar_margin_end)
+            val marginBottom = resources.getDimensionPixelSize(R.dimen.playlist_created_snackbar_margin_bottom)
+
+            (snackbarView.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+                params.width = parentWidth - marginStart - marginEnd
+                params.height = snackbarHeight
+                params.setMargins(marginStart, params.topMargin, marginEnd, marginBottom)
+                snackbarView.layoutParams = params
+            }
+        }
     }
 
     private companion object {
