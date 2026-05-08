@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="track_artwork_corner_radius">8dp</dimen>
+    <dimen name="playlists_grid_spacing">8dp</dimen>
 </resources>

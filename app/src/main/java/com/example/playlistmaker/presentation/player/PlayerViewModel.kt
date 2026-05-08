@@ -5,7 +5,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.playlistmaker.domain.interactor.FavoriteTracksInteractor
+import com.example.playlistmaker.domain.interactor.PlaylistInteractor
 import com.example.playlistmaker.domain.interactor.PlayerInteractor
+import com.example.playlistmaker.domain.model.Playlist
 import com.example.playlistmaker.domain.model.Track
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -17,7 +19,8 @@ import java.util.Locale
 class PlayerViewModel(
     track: Track,
     private val playerInteractor: PlayerInteractor,
-    private val favoriteTracksInteractor: FavoriteTracksInteractor
+    private val favoriteTracksInteractor: FavoriteTracksInteractor,
+    private val playlistInteractor: PlaylistInteractor
 ) : ViewModel() {
 
     private enum class PlayerState {
@@ -30,11 +33,18 @@ class PlayerViewModel(
     private val _uiState = MutableLiveData(PlayerUiState(track = track))
     val uiState: LiveData<PlayerUiState> = _uiState
 
+    private val _playlists = MutableLiveData<List<Playlist>>(emptyList())
+    val playlists: LiveData<List<Playlist>> = _playlists
+
+    private val _playlistEvent = MutableLiveData<PlayerPlaylistEvent?>()
+    val playlistEvent: LiveData<PlayerPlaylistEvent?> = _playlistEvent
+
     private var playerState = PlayerState.DEFAULT
     private var progressJob: Job? = null
 
     init {
         observeFavoriteState()
+        observePlaylists()
         preparePlayer()
     }
 
@@ -68,12 +78,30 @@ class PlayerViewModel(
         }
     }
 
-    fun onPlaylistCreated(playlistName: String) {
-        updateState { copy(createdPlaylistName = playlistName) }
+    fun onPlaylistSelected(playlist: Playlist) {
+        val currentTrack = _uiState.value?.track ?: return
+
+        if (currentTrack.trackId in playlist.trackIds) {
+            _playlistEvent.value = PlayerPlaylistEvent.TrackAlreadyAdded(playlist.name)
+            return
+        }
+
+        viewModelScope.launch {
+            val added = playlistInteractor.addTrackToPlaylist(currentTrack, playlist)
+            _playlistEvent.value = if (added) {
+                PlayerPlaylistEvent.TrackAdded(playlist.name)
+            } else {
+                PlayerPlaylistEvent.TrackAlreadyAdded(playlist.name)
+            }
+        }
     }
 
-    fun onPlaylistCreatedHandled() {
-        updateState { copy(createdPlaylistName = null) }
+    fun onPlaylistCreated(playlistName: String) {
+        _playlistEvent.value = PlayerPlaylistEvent.PlaylistCreated(playlistName)
+    }
+
+    fun onPlaylistEventHandled() {
+        _playlistEvent.value = null
     }
 
     override fun onCleared() {
@@ -89,6 +117,14 @@ class PlayerViewModel(
                 val isFavorite = favoriteTracks.any { it.trackId == currentTrack.trackId }
                 currentTrack.isFavorite = isFavorite
                 updateState { copy(isFavorite = isFavorite) }
+            }
+        }
+    }
+
+    private fun observePlaylists() {
+        viewModelScope.launch {
+            playlistInteractor.getPlaylists().collect { playlists ->
+                _playlists.value = playlists
             }
         }
     }

@@ -1,26 +1,27 @@
 package com.example.playlistmaker.presentation.player
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
 import com.example.playlistmaker.domain.model.Track
-import com.example.playlistmaker.presentation.playlist.NewPlaylistActivity
-import com.google.android.material.snackbar.Snackbar
+import com.example.playlistmaker.presentation.media.playlists.PlaylistBottomSheetAdapter
+import com.example.playlistmaker.presentation.playlist.NewPlaylistFragment
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
@@ -50,18 +51,13 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
     private lateinit var yearValueTextView: TextView
     private lateinit var genreValueTextView: TextView
     private lateinit var countryValueTextView: TextView
+    private lateinit var overlayView: View
+    private lateinit var playlistsBottomSheet: LinearLayout
+    private lateinit var playlistsRecyclerView: RecyclerView
+    private lateinit var newPlaylistButton: View
+    private lateinit var playlistsAdapter: PlaylistBottomSheetAdapter
 
-    private val newPlaylistLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val playlistName =
-                    result.data?.getStringExtra(NewPlaylistActivity.PLAYLIST_NAME_EXTRA)
-
-                if (!playlistName.isNullOrBlank()) {
-                    viewModel.onPlaylistCreated(playlistName)
-                }
-            }
-        }
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -73,14 +69,21 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
         }
 
         setupViews(view)
+        setupBottomSheet()
         setupFavoriteButton()
         setupAddToPlaylistButton()
         observeViewModel()
+        observeResults()
 
         view.findViewById<ImageButton>(R.id.backButton).setOnClickListener {
             findNavController().navigateUp()
         }
         playButton.setOnClickListener { viewModel.onPlayButtonClicked() }
+        newPlaylistButton.setOnClickListener {
+            hideBottomSheet()
+            findNavController().navigate(R.id.action_playerFragment_to_newPlaylistFragment)
+        }
+        overlayView.setOnClickListener { hideBottomSheet() }
     }
 
     override fun onPause() {
@@ -89,6 +92,7 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
     }
 
     override fun onDestroyView() {
+        playlistsRecyclerView.adapter = null
         boundTrackId = null
         super.onDestroyView()
     }
@@ -109,6 +113,39 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
         yearValueTextView = root.findViewById(R.id.yearValueTextView)
         genreValueTextView = root.findViewById(R.id.genreValueTextView)
         countryValueTextView = root.findViewById(R.id.countryValueTextView)
+        overlayView = root.findViewById(R.id.overlayView)
+        playlistsBottomSheet = root.findViewById(R.id.playlistsBottomSheet)
+        playlistsRecyclerView = root.findViewById(R.id.playlistsRecyclerView)
+        newPlaylistButton = root.findViewById(R.id.newPlaylistButton)
+
+        playlistsAdapter = PlaylistBottomSheetAdapter(emptyList()) { playlist ->
+            viewModel.onPlaylistSelected(playlist)
+        }
+        playlistsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        playlistsRecyclerView.adapter = playlistsAdapter
+    }
+
+    private fun setupBottomSheet() {
+        bottomSheetBehavior = BottomSheetBehavior.from(playlistsBottomSheet).apply {
+            state = BottomSheetBehavior.STATE_HIDDEN
+            isHideable = true
+        }
+
+        bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+                    overlayView.visibility = View.GONE
+                    overlayView.alpha = 0f
+                } else {
+                    overlayView.visibility = View.VISIBLE
+                    overlayView.alpha = 1f
+                }
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                overlayView.alpha = ((slideOffset + 1f) / 2f).coerceIn(0f, 1f)
+            }
+        })
     }
 
     private fun observeViewModel() {
@@ -131,12 +168,47 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
                 favoriteButton.setImageResource(R.drawable.ic_favorite)
                 favoriteButton.setColorFilter(requireContext().getColor(R.color.player_small_icon_color))
             }
+        }
 
-            state.createdPlaylistName?.let { playlistName ->
-                showPlaylistCreatedSnackbar(playlistName)
-                viewModel.onPlaylistCreatedHandled()
+        viewModel.playlists.observe(viewLifecycleOwner) { playlists ->
+            playlistsAdapter.updatePlaylists(playlists)
+        }
+
+        viewModel.playlistEvent.observe(viewLifecycleOwner) { event ->
+            when (event) {
+                null -> Unit
+                is PlayerPlaylistEvent.PlaylistCreated -> {
+                    showToast(getString(R.string.playlist_created_message, event.playlistName))
+                    viewModel.onPlaylistEventHandled()
+                }
+                is PlayerPlaylistEvent.TrackAdded -> {
+                    hideBottomSheet()
+                    showToast(getString(R.string.track_added_to_playlist_message, event.playlistName))
+                    viewModel.onPlaylistEventHandled()
+                }
+                is PlayerPlaylistEvent.TrackAlreadyAdded -> {
+                    showToast(
+                        getString(
+                            R.string.track_already_added_to_playlist_message,
+                            event.playlistName
+                        )
+                    )
+                    viewModel.onPlaylistEventHandled()
+                }
             }
         }
+    }
+
+    private fun observeResults() {
+        findNavController().currentBackStackEntry
+            ?.savedStateHandle
+            ?.getLiveData<String>(NewPlaylistFragment.RESULT_PLAYLIST_CREATED)
+            ?.observe(viewLifecycleOwner) { playlistName ->
+                viewModel.onPlaylistCreated(playlistName)
+                findNavController().currentBackStackEntry
+                    ?.savedStateHandle
+                    ?.remove<String>(NewPlaylistFragment.RESULT_PLAYLIST_CREATED)
+            }
     }
 
     private fun bindTrack(state: PlayerUiState) {
@@ -184,30 +256,19 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
     }
 
     private fun setupAddToPlaylistButton() {
-        addToPlaylistButton.setOnClickListener {
-            val intent = Intent(requireContext(), NewPlaylistActivity::class.java)
-            newPlaylistLauncher.launch(intent)
-        }
+        addToPlaylistButton.setOnClickListener { showBottomSheet() }
     }
 
-    private fun showPlaylistCreatedSnackbar(playlistName: String) {
-        val snackbar = Snackbar.make(
-            requireView(),
-            getString(R.string.playlist_created_message, playlistName),
-            Snackbar.LENGTH_LONG
-        )
+    private fun showBottomSheet() {
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+    }
 
-        snackbar.view.setBackgroundResource(R.drawable.snackbar_bg)
+    private fun hideBottomSheet() {
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+    }
 
-        snackbar.view.findViewById<TextView>(
-            com.google.android.material.R.id.snackbar_text
-        ).apply {
-            gravity = Gravity.CENTER
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setTextColor(requireContext().getColor(R.color.snackbar_text))
-        }
-
-        snackbar.show()
+    private fun showToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     @Suppress("DEPRECATION")
