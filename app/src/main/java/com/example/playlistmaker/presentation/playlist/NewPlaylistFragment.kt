@@ -16,6 +16,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
 import com.google.android.material.textfield.TextInputEditText
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -141,6 +142,11 @@ class NewPlaylistFragment : Fragment(R.layout.activity_new_playlist) {
         Glide.with(this)
             .load(coverUri)
             .centerCrop()
+            .transform(
+                RoundedCorners(
+                    resources.getDimensionPixelSize(R.dimen.track_artwork_corner_radius)
+                )
+            )
             .into(coverImageView)
     }
 
