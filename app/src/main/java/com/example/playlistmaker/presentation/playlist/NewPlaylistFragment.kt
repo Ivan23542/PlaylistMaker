@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +31,7 @@ class NewPlaylistFragment : Fragment(R.layout.activity_new_playlist) {
     private lateinit var createButton: Button
     private lateinit var imageContainer: View
     private lateinit var coverImageView: ImageView
+    private lateinit var titleTextView: TextView
 
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -58,6 +60,7 @@ class NewPlaylistFragment : Fragment(R.layout.activity_new_playlist) {
         }
 
         setupViews(view)
+        loadEditPlaylistIfNeeded()
         restoreSavedState(savedInstanceState)
         observeViewModel()
         setupListeners(view)
@@ -72,6 +75,7 @@ class NewPlaylistFragment : Fragment(R.layout.activity_new_playlist) {
     }
 
     private fun setupViews(root: View) {
+        titleTextView = root.findViewById(R.id.titleTextView)
         imageContainer = root.findViewById(R.id.imageContainer)
         coverImageView = root.findViewById(R.id.coverImageView)
         nameEditText = root.findViewById(R.id.playlistNameEditText)
@@ -116,12 +120,23 @@ class NewPlaylistFragment : Fragment(R.layout.activity_new_playlist) {
             }
 
             createButton.isEnabled = state.isCreateButtonEnabled
+            titleTextView.setText(
+                if (state.isEditMode) R.string.edit_playlist_title else R.string.new_playlist
+            )
+            createButton.setText(
+                if (state.isEditMode) R.string.save_playlist_button else R.string.create
+            )
             renderCover(state.coverUri)
 
             state.createdPlaylistName?.let { playlistName ->
                 findNavController().previousBackStackEntry
                     ?.savedStateHandle
                     ?.set(RESULT_PLAYLIST_CREATED, playlistName)
+                viewModel.onPlaylistCreatedHandled()
+                findNavController().navigateUp()
+            }
+
+            state.savedPlaylistName?.let {
                 viewModel.onPlaylistCreatedHandled()
                 findNavController().navigateUp()
             }
@@ -152,6 +167,11 @@ class NewPlaylistFragment : Fragment(R.layout.activity_new_playlist) {
 
     private fun handleCloseRequest() {
         val currentState = viewModel.uiState.value ?: NewPlaylistUiState()
+        if (currentState.isEditMode) {
+            findNavController().navigateUp()
+            return
+        }
+
         if (!currentState.hasUnsavedChanges()) {
             findNavController().navigateUp()
             return
@@ -182,11 +202,22 @@ class NewPlaylistFragment : Fragment(R.layout.activity_new_playlist) {
         viewModel.restoreState(restoredName, restoredDescription, restoredCoverUri)
     }
 
+    private fun loadEditPlaylistIfNeeded() {
+        val playlistId = arguments?.getLong(ARG_PLAYLIST_ID, NO_PLAYLIST_ID) ?: NO_PLAYLIST_ID
+        val isEditMode = arguments?.getBoolean(ARG_EDIT_MODE, false) ?: false
+        if (isEditMode && playlistId != NO_PLAYLIST_ID) {
+            viewModel.loadPlaylistForEdit(playlistId)
+        }
+    }
+
     companion object {
         const val RESULT_PLAYLIST_CREATED = "result_playlist_created"
+        const val ARG_PLAYLIST_ID = "playlistId"
+        const val ARG_EDIT_MODE = "editMode"
 
         private const val STATE_NAME = "state_name"
         private const val STATE_DESCRIPTION = "state_description"
         private const val STATE_COVER_URI = "state_cover_uri"
+        private const val NO_PLAYLIST_ID = -1L
     }
 }

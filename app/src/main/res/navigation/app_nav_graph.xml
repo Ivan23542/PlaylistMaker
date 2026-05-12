@@ -26,6 +26,10 @@
         <action
             android:id="@+id/action_mediatekaFragment_to_newPlaylistFragment"
             app:destination="@id/newPlaylistFragment" />
+
+        <action
+            android:id="@+id/action_mediatekaFragment_to_playlistDetailsFragment"
+            app:destination="@id/playlistDetailsFragment" />
     </fragment>
 
     <fragment
@@ -50,6 +54,35 @@
     <fragment
         android:id="@+id/newPlaylistFragment"
         android:name="com.example.playlistmaker.presentation.playlist.NewPlaylistFragment"
-        android:label="@string/new_playlist" />
+        android:label="@string/new_playlist">
+
+        <argument
+            android:name="playlistId"
+            android:defaultValue="-1L"
+            app:argType="long" />
+
+        <argument
+            android:name="editMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/playlistDetailsFragment"
+        android:name="com.example.playlistmaker.presentation.media.playlists.PlaylistDetailsFragment"
+        android:label="@string/playlists_tab">
+
+        <argument
+            android:name="playlistId"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_playlistDetailsFragment_to_playerFragment"
+            app:destination="@id/playerFragment" />
+
+        <action
+            android:id="@+id/action_playlistDetailsFragment_to_newPlaylistFragment"
+            app:destination="@id/newPlaylistFragment" />
+    </fragment>
 
 </navigation>

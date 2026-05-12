@@ -33,7 +33,14 @@ class PlaylistsFragment : Fragment(R.layout.fragment_playlists) {
         playlistsRecyclerView = view.findViewById(R.id.playlistsRecyclerView)
         emptyStateContainer = view.findViewById(R.id.emptyStateContainer)
 
-        playlistsAdapter = PlaylistGridAdapter(emptyList())
+        playlistsAdapter = PlaylistGridAdapter(emptyList()) { playlist ->
+            findNavController().navigate(
+                R.id.action_mediatekaFragment_to_playlistDetailsFragment,
+                Bundle().apply {
+                    putLong(PlaylistDetailsFragment.ARG_PLAYLIST_ID, playlist.id)
+                }
+            )
+        }
         playlistsRecyclerView.layoutManager = GridLayoutManager(requireContext(), SPAN_COUNT)
         playlistsRecyclerView.adapter = playlistsAdapter
         playlistsRecyclerView.addItemDecoration(

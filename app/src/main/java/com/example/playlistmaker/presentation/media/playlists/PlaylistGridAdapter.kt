@@ -5,7 +5,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.playlistmaker.domain.model.Playlist
 
 class PlaylistGridAdapter(
-    private var playlists: List<Playlist>
+    private var playlists: List<Playlist>,
+    private val onPlaylistClick: (Playlist) -> Unit
 ) : RecyclerView.Adapter<PlaylistGridViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaylistGridViewHolder {
@@ -13,7 +14,11 @@ class PlaylistGridAdapter(
     }
 
     override fun onBindViewHolder(holder: PlaylistGridViewHolder, position: Int) {
-        holder.bind(playlists[position])
+        val playlist = playlists[position]
+        holder.bind(playlist)
+        holder.itemView.setOnClickListener {
+            onPlaylistClick(playlist)
+        }
     }
 
     override fun getItemCount(): Int = playlists.size

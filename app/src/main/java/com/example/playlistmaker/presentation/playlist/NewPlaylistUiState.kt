@@ -5,7 +5,9 @@ data class NewPlaylistUiState(
     val description: String = "",
     val coverUri: String? = null,
     val isCreateButtonEnabled: Boolean = false,
-    val createdPlaylistName: String? = null
+    val createdPlaylistName: String? = null,
+    val savedPlaylistName: String? = null,
+    val isEditMode: Boolean = false
 ) {
     fun hasUnsavedChanges(): Boolean {
         return name.isNotBlank() || description.isNotBlank() || !coverUri.isNullOrBlank()
