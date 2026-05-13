@@ -9,7 +9,8 @@
     <dimen name="playlist_created_snackbar_margin_bottom">16dp</dimen>
     <dimen name="playlist_created_snackbar_padding_start">16dp</dimen>
     <dimen name="playlist_created_snackbar_padding_end">8dp</dimen>
-    <dimen name="playlist_detail_cover_size">280dp</dimen>
-    <dimen name="playlist_detail_bottom_sheet_peek">105dp</dimen>
-    <dimen name="playlist_detail_menu_peek">223dp</dimen>
+    <dimen name="playlist_detail_cover_size">312dp</dimen>
+    <dimen name="playlist_detail_cover_placeholder_padding">38dp</dimen>
+    <dimen name="playlist_detail_bottom_sheet_peek">266dp</dimen>
+    <dimen name="playlist_detail_menu_peek">383dp</dimen>
 </resources>

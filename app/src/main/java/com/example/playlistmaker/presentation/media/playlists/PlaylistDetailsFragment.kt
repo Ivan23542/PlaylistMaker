@@ -55,6 +55,9 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist_details) {
     private lateinit var menuBottomSheetBehavior: BottomSheetBehavior<LinearLayout>
 
     private var currentPlaylist: Playlist? = null
+    private val coverPlaceholderPadding by lazy(LazyThreadSafetyMode.NONE) {
+        resources.getDimensionPixelSize(R.dimen.playlist_detail_cover_placeholder_padding)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -223,11 +226,18 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist_details) {
 
     private fun renderCover(coverPath: String?) {
         if (coverPath.isNullOrBlank()) {
+            coverImageView.setPadding(
+                coverPlaceholderPadding,
+                coverPlaceholderPadding,
+                coverPlaceholderPadding,
+                coverPlaceholderPadding
+            )
             coverImageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
             coverImageView.setImageResource(R.drawable.vector)
             return
         }
 
+        coverImageView.setPadding(0, 0, 0, 0)
         coverImageView.scaleType = ImageView.ScaleType.CENTER_CROP
         Glide.with(this)
             .load(File(coverPath))
@@ -271,8 +281,8 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist_details) {
         AlertDialog.Builder(requireContext())
             .setTitle(R.string.delete_playlist_title)
             .setMessage(R.string.delete_playlist_message)
-            .setNegativeButton(R.string.cancel_dialog, null)
-            .setPositiveButton(R.string.dialog_delete) { _, _ ->
+            .setNegativeButton(R.string.dialog_no, null)
+            .setPositiveButton(R.string.dialog_yes) { _, _ ->
                 viewModel.onPlaylistDeleteConfirmed()
             }
             .show()

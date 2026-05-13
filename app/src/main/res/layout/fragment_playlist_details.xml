@@ -29,22 +29,27 @@
 
         <ImageView
             android:id="@+id/playlistCoverImageView"
-            android:layout_width="@dimen/playlist_detail_cover_size"
-            android:layout_height="@dimen/playlist_detail_cover_size"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="40dp"
+            android:layout_marginEnd="24dp"
             android:contentDescription="@string/playlist_cover"
             android:scaleType="centerInside"
             android:src="@drawable/vector"
+            app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_max="@dimen/playlist_detail_cover_size"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_max="@dimen/playlist_detail_cover_size" />
 
         <TextView
             android:id="@+id/playlistTitleTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="64dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
             android:ellipsize="end"
             android:fontFamily="@font/ys_display_medium"
@@ -176,6 +181,7 @@
         android:paddingStart="16dp"
         android:paddingTop="8dp"
         android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
         app:behavior_hideable="true"
         app:behavior_peekHeight="@dimen/playlist_detail_menu_peek"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
