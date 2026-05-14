@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnLayout
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -45,6 +46,7 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist_details) {
     private lateinit var shareButton: ImageButton
     private lateinit var menuButton: ImageButton
     private lateinit var overlayView: View
+    private lateinit var tracksBottomSheet: LinearLayout
     private lateinit var tracksRecyclerView: RecyclerView
     private lateinit var emptyTracksTextView: TextView
     private lateinit var menuBottomSheet: LinearLayout
@@ -52,27 +54,49 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist_details) {
     private lateinit var menuTitleTextView: TextView
     private lateinit var menuTracksCountTextView: TextView
     private lateinit var tracksAdapter: TrackAdapter
+    private lateinit var tracksBottomSheetBehavior: BottomSheetBehavior<LinearLayout>
     private lateinit var menuBottomSheetBehavior: BottomSheetBehavior<LinearLayout>
 
     private var currentPlaylist: Playlist? = null
+    private var tracksBottomSheetBaseBottomPadding = 0
+    private var menuBottomSheetBaseBottomPadding = 0
     private val coverPlaceholderPadding by lazy(LazyThreadSafetyMode.NONE) {
         resources.getDimensionPixelSize(R.dimen.playlist_detail_cover_placeholder_padding)
+    }
+    private val menuCoverPlaceholderPadding by lazy(LazyThreadSafetyMode.NONE) {
+        resources.getDimensionPixelSize(R.dimen.playlist_detail_menu_cover_placeholder_padding)
+    }
+    private val tracksSheetTopSpacing by lazy(LazyThreadSafetyMode.NONE) {
+        resources.getDimensionPixelSize(R.dimen.playlist_detail_tracks_sheet_spacing)
+    }
+    private val menuSheetTopSpacing by lazy(LazyThreadSafetyMode.NONE) {
+        resources.getDimensionPixelSize(R.dimen.playlist_detail_menu_sheet_spacing)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupViews(view)
+
         ViewCompat.setOnApplyWindowInsetsListener(view) { target, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             target.updatePadding(top = systemBars.top)
+            tracksBottomSheet.updatePadding(
+                bottom = tracksBottomSheetBaseBottomPadding + systemBars.bottom
+            )
+            menuBottomSheet.updatePadding(
+                bottom = menuBottomSheetBaseBottomPadding + systemBars.bottom
+            )
+            target.post { updateBottomSheetPeekHeights(target) }
             insets
         }
 
-        setupViews(view)
-        setupTrackBottomSheet(view)
+        setupTrackBottomSheet()
         setupMenuBottomSheet()
         setupListeners(view)
         observeViewModel()
+
+        view.doOnLayout(::updateBottomSheetPeekHeights)
     }
 
     override fun onDestroyView() {
@@ -88,12 +112,15 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist_details) {
         shareButton = root.findViewById(R.id.shareButton)
         menuButton = root.findViewById(R.id.menuButton)
         overlayView = root.findViewById(R.id.overlayView)
+        tracksBottomSheet = root.findViewById(R.id.tracksBottomSheet)
         tracksRecyclerView = root.findViewById(R.id.tracksRecyclerView)
         emptyTracksTextView = root.findViewById(R.id.emptyTracksTextView)
         menuBottomSheet = root.findViewById(R.id.menuBottomSheet)
         menuCoverImageView = root.findViewById(R.id.menuPlaylistCoverImageView)
         menuTitleTextView = root.findViewById(R.id.menuPlaylistTitleTextView)
         menuTracksCountTextView = root.findViewById(R.id.menuPlaylistTracksCountTextView)
+        tracksBottomSheetBaseBottomPadding = tracksBottomSheet.paddingBottom
+        menuBottomSheetBaseBottomPadding = menuBottomSheet.paddingBottom
 
         tracksAdapter = TrackAdapter(
             tracks = emptyList(),
@@ -104,8 +131,8 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist_details) {
         tracksRecyclerView.adapter = tracksAdapter
     }
 
-    private fun setupTrackBottomSheet(root: View) {
-        BottomSheetBehavior.from<LinearLayout>(root.findViewById(R.id.tracksBottomSheet)).apply {
+    private fun setupTrackBottomSheet() {
+        tracksBottomSheetBehavior = BottomSheetBehavior.from(tracksBottomSheet).apply {
             state = BottomSheetBehavior.STATE_COLLAPSED
             isHideable = false
         }
@@ -182,10 +209,12 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist_details) {
             )
 
             renderCover(playlist.coverPath)
-            bindMenuHeader(playlist)
+            renderMenuHeader(playlist)
             tracksAdapter.updateTracks(state.tracks)
             tracksRecyclerView.visibility = if (state.tracks.isEmpty()) View.GONE else View.VISIBLE
             emptyTracksTextView.visibility = if (state.tracks.isEmpty()) View.VISIBLE else View.GONE
+            val root = view ?: return@observe
+            root.post { updateBottomSheetPeekHeights(root) }
         }
 
         viewModel.event.observe(viewLifecycleOwner) { event ->
@@ -207,12 +236,26 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist_details) {
         }
     }
 
-    private fun bindMenuHeader(playlist: Playlist) {
+    private fun renderMenuHeader(playlist: Playlist) {
         menuTitleTextView.text = playlist.name
         menuTracksCountTextView.text = formatTrackCount(requireContext(), playlist.tracksCount)
 
+        if (playlist.coverPath.isNullOrBlank()) {
+            menuCoverImageView.setPadding(
+                menuCoverPlaceholderPadding,
+                menuCoverPlaceholderPadding,
+                menuCoverPlaceholderPadding,
+                menuCoverPlaceholderPadding
+            )
+            menuCoverImageView.scaleType = ImageView.ScaleType.FIT_CENTER
+            menuCoverImageView.setImageResource(R.drawable.vector)
+            return
+        }
+
+        menuCoverImageView.setPadding(0, 0, 0, 0)
+        menuCoverImageView.scaleType = ImageView.ScaleType.CENTER_CROP
         Glide.with(this)
-            .load(playlist.coverPath?.takeIf { it.isNotBlank() }?.let(::File))
+            .load(File(playlist.coverPath))
             .placeholder(R.drawable.vector)
             .error(R.drawable.vector)
             .centerCrop()
@@ -232,7 +275,7 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist_details) {
                 coverPlaceholderPadding,
                 coverPlaceholderPadding
             )
-            coverImageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
+            coverImageView.scaleType = ImageView.ScaleType.FIT_CENTER
             coverImageView.setImageResource(R.drawable.vector)
             return
         }
@@ -302,6 +345,23 @@ class PlaylistDetailsFragment : Fragment(R.layout.fragment_playlist_details) {
 
     private fun hideMenuBottomSheet() {
         menuBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+    }
+
+    private fun updateBottomSheetPeekHeights(root: View) {
+        if (!::tracksBottomSheetBehavior.isInitialized || !::menuBottomSheetBehavior.isInitialized) {
+            return
+        }
+        if (root.height == 0) return
+
+        val tracksPeekHeight = (root.height - shareButton.bottom - tracksSheetTopSpacing)
+            .coerceAtLeast(0)
+        tracksBottomSheetBehavior.peekHeight = tracksPeekHeight
+
+        val menuPeekHeight = (root.height - titleTextView.bottom - menuSheetTopSpacing).coerceAtLeast(0)
+        menuBottomSheet.layoutParams = menuBottomSheet.layoutParams.apply {
+            height = menuPeekHeight
+        }
+        menuBottomSheetBehavior.peekHeight = menuPeekHeight
     }
 
     private fun formatMinutes(minutes: Int): String {

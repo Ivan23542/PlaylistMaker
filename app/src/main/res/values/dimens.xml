@@ -11,6 +11,9 @@
     <dimen name="playlist_created_snackbar_padding_end">8dp</dimen>
     <dimen name="playlist_detail_cover_size">312dp</dimen>
     <dimen name="playlist_detail_cover_placeholder_padding">38dp</dimen>
+    <dimen name="playlist_detail_menu_cover_placeholder_padding">6dp</dimen>
     <dimen name="playlist_detail_bottom_sheet_peek">266dp</dimen>
     <dimen name="playlist_detail_menu_peek">383dp</dimen>
+    <dimen name="playlist_detail_tracks_sheet_spacing">16dp</dimen>
+    <dimen name="playlist_detail_menu_sheet_spacing">16dp</dimen>
 </resources>
