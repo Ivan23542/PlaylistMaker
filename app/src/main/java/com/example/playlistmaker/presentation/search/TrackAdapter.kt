@@ -7,6 +7,7 @@ import com.example.playlistmaker.presentation.search.TrackViewHolder
 
 class TrackAdapter(
     private var tracks: List<Track>,
+    private val onTrackLongClick: ((Track) -> Unit)? = null,
     private val onTrackClick: (Track) -> Unit
 ) : RecyclerView.Adapter<TrackViewHolder>() {
 
@@ -19,6 +20,10 @@ class TrackAdapter(
         holder.bind(track)
         holder.itemView.setOnClickListener {
             onTrackClick(track)
+        }
+        holder.itemView.setOnLongClickListener {
+            onTrackLongClick?.invoke(track)
+            onTrackLongClick != null
         }
     }
 

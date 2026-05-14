@@ -42,5 +42,9 @@
     <color name="media_placeholder_face_color">#F4D35E</color>
     <color name="media_placeholder_features_color">#1A1B22</color>
     <color name="bottom_navigation_divider_color">#E6E8EB</color>
+    <color name="playlist_detail_header_background">#E6E8EB</color>
+    <color name="playlist_detail_sheet_background">#FFFFFF</color>
+    <color name="playlist_detail_handle_color">#E6E8EB</color>
+    <color name="playlist_detail_text_color">#1A1B22</color>
 
 </resources>

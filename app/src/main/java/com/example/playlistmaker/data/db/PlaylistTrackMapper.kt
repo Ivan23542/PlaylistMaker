@@ -18,4 +18,19 @@ object PlaylistTrackMapper {
             previewUrl = track.previewUrl
         )
     }
+
+    fun map(entity: PlaylistTrackEntity): Track {
+        return Track(
+            trackId = entity.trackId,
+            trackName = entity.trackName,
+            artistName = entity.artistName,
+            trackTime = entity.trackTime,
+            artworkUrl100 = entity.artworkUrl100,
+            collectionName = entity.collectionName,
+            releaseDate = entity.releaseDate,
+            primaryGenreName = entity.primaryGenreName,
+            country = entity.country,
+            previewUrl = entity.previewUrl
+        )
+    }
 }

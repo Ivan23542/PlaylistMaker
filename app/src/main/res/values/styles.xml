@@ -232,6 +232,16 @@
         <item name="android:fontFamily">@font/ys_display_medium</item>
     </style>
 
+    <style name="PlaylistDetailsMenuItem">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingTop">18dp</item>
+        <item name="android:paddingBottom">18dp</item>
+        <item name="android:fontFamily">@font/ys_display_regular</item>
+        <item name="android:textColor">@color/track_name_color</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
 
 
 </resources>

@@ -11,7 +11,9 @@ import com.example.playlistmaker.domain.model.Track
 import com.example.playlistmaker.domain.repository.PlaylistRepository
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.Dispatchers
 import java.io.File
 import java.io.FileOutputStream
 
@@ -27,10 +29,31 @@ class PlaylistRepositoryImpl(
         appDatabase.playlistDao().insertPlaylist(PlaylistMapper.map(playlistToSave, gson))
     }
 
+    override suspend fun updatePlaylist(playlist: Playlist) {
+        val savedCoverPath = copyCoverToPrivateStorage(playlist.coverPath)
+        val playlistToSave = playlist.copy(coverPath = savedCoverPath)
+        appDatabase.playlistDao().updatePlaylist(PlaylistMapper.map(playlistToSave, gson))
+    }
+
     override fun getPlaylists(): Flow<List<Playlist>> {
         return appDatabase.playlistDao().getPlaylists().map { playlists ->
             playlists.map { PlaylistMapper.map(it, gson) }
-        }
+        }.flowOn(Dispatchers.IO)
+    }
+
+    override fun getPlaylist(playlistId: Long): Flow<Playlist?> {
+        return appDatabase.playlistDao().observePlaylistById(playlistId).map { playlist ->
+            playlist?.let { PlaylistMapper.map(it, gson) }
+        }.flowOn(Dispatchers.IO)
+    }
+
+    override fun getPlaylistTracks(trackIds: List<Long>): Flow<List<Track>> {
+        return appDatabase.playlistTrackDao().getTracks().map { tracks ->
+            val tracksById = tracks.associateBy { it.trackId }
+            trackIds.asReversed()
+                .mapNotNull { trackId -> tracksById[trackId] }
+                .map(PlaylistTrackMapper::map)
+        }.flowOn(Dispatchers.IO)
     }
 
     override suspend fun addTrackToPlaylist(track: Track, playlist: Playlist): Boolean {
@@ -50,6 +73,45 @@ class PlaylistRepositoryImpl(
         appDatabase.playlistDao().updatePlaylist(PlaylistMapper.map(updatedPlaylist, gson))
 
         return true
+    }
+
+    override suspend fun removeTrackFromPlaylist(playlistId: Long, trackId: Long) {
+        val playlistEntity = appDatabase.playlistDao().getPlaylistById(playlistId) ?: return
+        val playlist = PlaylistMapper.map(playlistEntity, gson)
+        val updatedTrackIds = playlist.trackIds.filterNot { it == trackId }
+
+        appDatabase.playlistDao().updatePlaylist(
+            PlaylistMapper.map(
+                playlist.copy(
+                    trackIds = updatedTrackIds,
+                    tracksCount = updatedTrackIds.size
+                ),
+                gson
+            )
+        )
+
+        deleteTrackIfOrphan(trackId)
+    }
+
+    override suspend fun deletePlaylist(playlistId: Long) {
+        val playlistEntity = appDatabase.playlistDao().getPlaylistById(playlistId) ?: return
+        val playlist = PlaylistMapper.map(playlistEntity, gson)
+
+        appDatabase.playlistDao().deletePlaylistById(playlistId)
+        playlist.trackIds.forEach { trackId ->
+            deleteTrackIfOrphan(trackId)
+        }
+    }
+
+    private suspend fun deleteTrackIfOrphan(trackId: Long) {
+        val isTrackStillUsed = appDatabase.playlistDao()
+            .getPlaylistsOnce()
+            .map { PlaylistMapper.map(it, gson) }
+            .any { playlist -> trackId in playlist.trackIds }
+
+        if (!isTrackStillUsed) {
+            appDatabase.playlistTrackDao().deleteTrackById(trackId)
+        }
     }
 
     private fun copyCoverToPrivateStorage(coverPath: String?): String? {
