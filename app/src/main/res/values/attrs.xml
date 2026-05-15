@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <attr name="placeholderIconColor" format="color" />
+
+    <declare-styleable name="PlaybackButtonView">
+        <attr name="playbackPlayImage" format="reference" />
+        <attr name="playbackPauseImage" format="reference" />
+    </declare-styleable>
 </resources>

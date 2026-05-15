@@ -38,7 +38,7 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
 
     private lateinit var favoriteButton: ImageButton
     private lateinit var addToPlaylistButton: ImageButton
-    private lateinit var playButton: ImageButton
+    private lateinit var playButton: PlaybackButtonView
 
     private lateinit var coverImageView: ImageView
     private lateinit var trackNameTextView: TextView
@@ -157,9 +157,7 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
 
             progressTextView.text = state.progress
             playButton.isEnabled = state.isPlayButtonEnabled
-            playButton.setImageResource(
-                if (state.isPlaying) R.drawable.ic_pause else R.drawable.ic_play
-            )
+            playButton.setPlaying(state.isPlaying)
 
             if (state.isFavorite) {
                 favoriteButton.setImageResource(R.drawable.ic_favorite_filled)
