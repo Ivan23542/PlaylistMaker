@@ -1,13 +1,21 @@
 package com.example.playlistmaker.presentation.player
 
+import android.Manifest
+import android.content.ComponentName
+import android.content.Context
+import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -35,6 +43,24 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
     }
 
     private var boundTrackId: Long? = null
+    private var isPlayerServiceBound = false
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        viewModel.onNotificationPermissionChanged(isGranted)
+    }
+
+    private val playerServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val playerService = (service as AudioPlayerService.PlayerBinder).getService()
+            viewModel.onPlayerServiceConnected(playerService)
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            viewModel.onPlayerServiceDisconnected()
+        }
+    }
 
     private lateinit var favoriteButton: ImageButton
     private lateinit var addToPlaylistButton: ImageButton
@@ -74,6 +100,8 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
         setupAddToPlaylistButton()
         observeViewModel()
         observeResults()
+        requestNotificationPermissionIfNeeded()
+        bindPlayerService()
 
         view.findViewById<ImageButton>(R.id.backButton).setOnClickListener {
             findNavController().navigateUp()
@@ -86,12 +114,19 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
         overlayView.setOnClickListener { hideBottomSheet() }
     }
 
-    override fun onPause() {
-        super.onPause()
-        viewModel.onPause()
+    override fun onStart() {
+        super.onStart()
+        viewModel.onPlayerScreenVisible()
+    }
+
+    override fun onStop() {
+        viewModel.onPlayerScreenHidden(canShowPlaybackNotification())
+        super.onStop()
     }
 
     override fun onDestroyView() {
+        viewModel.onPlayerScreenClosed()
+        unbindPlayerService()
         playlistsRecyclerView.adapter = null
         boundTrackId = null
         super.onDestroyView()
@@ -255,6 +290,42 @@ class PlayerFragment : Fragment(R.layout.activity_player) {
 
     private fun setupAddToPlaylistButton() {
         addToPlaylistButton.setOnClickListener { showBottomSheet() }
+    }
+
+    private fun bindPlayerService() {
+        val intent = AudioPlayerService.createIntent(requireContext(), track)
+        isPlayerServiceBound = requireContext().bindService(
+            intent,
+            playerServiceConnection,
+            Context.BIND_AUTO_CREATE
+        )
+    }
+
+    private fun unbindPlayerService() {
+        if (isPlayerServiceBound) {
+            requireContext().unbindService(playerServiceConnection)
+            isPlayerServiceBound = false
+        }
+        viewModel.onPlayerServiceDisconnected()
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    private fun canShowPlaybackNotification(): Boolean {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun showBottomSheet() {
