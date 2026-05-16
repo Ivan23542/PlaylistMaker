@@ -2,7 +2,6 @@ package com.example.playlistmaker.di
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.media.MediaPlayer
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -77,6 +76,4 @@ val dataModule = module {
             .addMigrations(migrationFrom1To2)
             .build()
     }
-
-    factory { MediaPlayer() }
 }

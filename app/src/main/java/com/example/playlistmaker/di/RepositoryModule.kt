@@ -1,13 +1,11 @@
 package com.example.playlistmaker.di
 
 import com.example.playlistmaker.data.repository.FavoriteTracksRepositoryImpl
-import com.example.playlistmaker.data.player.PlayerRepositoryImpl
 import com.example.playlistmaker.data.repository.PlaylistRepositoryImpl
 import com.example.playlistmaker.data.repository.SearchHistoryRepositoryImpl
 import com.example.playlistmaker.data.repository.SettingsRepositoryImpl
 import com.example.playlistmaker.data.repository.TracksRepositoryImpl
 import com.example.playlistmaker.domain.repository.FavoriteTracksRepository
-import com.example.playlistmaker.domain.repository.PlayerRepository
 import com.example.playlistmaker.domain.repository.PlaylistRepository
 import com.example.playlistmaker.domain.repository.SearchHistoryRepository
 import com.example.playlistmaker.domain.repository.SettingsRepository
@@ -25,6 +23,4 @@ val repositoryModule = module {
     single<SettingsRepository> { SettingsRepositoryImpl(get()) }
 
     single<PlaylistRepository> { PlaylistRepositoryImpl(get(), get(), get()) }
-
-    factory<PlayerRepository> { PlayerRepositoryImpl(get()) }
 }

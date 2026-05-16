@@ -6,29 +6,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.playlistmaker.domain.interactor.FavoriteTracksInteractor
 import com.example.playlistmaker.domain.interactor.PlaylistInteractor
-import com.example.playlistmaker.domain.interactor.PlayerInteractor
 import com.example.playlistmaker.domain.model.Playlist
 import com.example.playlistmaker.domain.model.Track
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class PlayerViewModel(
     track: Track,
-    private val playerInteractor: PlayerInteractor,
     private val favoriteTracksInteractor: FavoriteTracksInteractor,
     private val playlistInteractor: PlaylistInteractor
 ) : ViewModel() {
-
-    private enum class PlayerState {
-        DEFAULT,
-        PREPARED,
-        PLAYING,
-        PAUSED
-    }
 
     private val _uiState = MutableLiveData(PlayerUiState(track = track))
     val uiState: LiveData<PlayerUiState> = _uiState
@@ -39,21 +28,25 @@ class PlayerViewModel(
     private val _playlistEvent = MutableLiveData<PlayerPlaylistEvent?>()
     val playlistEvent: LiveData<PlayerPlaylistEvent?> = _playlistEvent
 
-    private var playerState = PlayerState.DEFAULT
-    private var progressJob: Job? = null
+    private var playbackServiceController: PlaybackServiceController? = null
+    private var playerStateJob: Job? = null
+    private var isPlayerScreenVisible = true
+    private var canShowPlaybackNotification = false
 
     init {
         observeFavoriteState()
         observePlaylists()
-        preparePlayer()
     }
 
     fun onPlayButtonClicked() {
-        when (playerState) {
-            PlayerState.PLAYING -> pausePlayer()
-            PlayerState.PREPARED, PlayerState.PAUSED -> startPlayer()
-            PlayerState.DEFAULT -> Unit
+        val controller = playbackServiceController ?: return
+
+        if (controller.getPlayerState().isPlaying) {
+            controller.pausePlayer()
+        } else {
+            controller.startPlayer()
         }
+        updateForegroundNotification()
     }
 
     fun onFavoriteClicked() {
@@ -69,12 +62,6 @@ class PlayerViewModel(
 
             currentState.track.isFavorite = updatedIsFavorite
             updateState { copy(isFavorite = updatedIsFavorite) }
-        }
-    }
-
-    fun onPause() {
-        if (playerState == PlayerState.PLAYING) {
-            pausePlayer()
         }
     }
 
@@ -104,10 +91,54 @@ class PlayerViewModel(
         _playlistEvent.value = null
     }
 
+    fun onPlayerServiceConnected(controller: PlaybackServiceController) {
+        playbackServiceController = controller
+        playerStateJob?.cancel()
+        playerStateJob = viewModelScope.launch {
+            controller.observePlayerState().collect { serviceState ->
+                updateState {
+                    copy(
+                        progress = formatTime(serviceState.progressMillis),
+                        isPlayButtonEnabled = serviceState.isPlayButtonEnabled,
+                        isPlaying = serviceState.isPlaying
+                    )
+                }
+                updateForegroundNotification()
+            }
+        }
+    }
+
+    fun onPlayerServiceDisconnected() {
+        playerStateJob?.cancel()
+        playerStateJob = null
+        playbackServiceController = null
+    }
+
+    fun onPlayerScreenVisible() {
+        isPlayerScreenVisible = true
+        playbackServiceController?.hideForegroundNotification()
+    }
+
+    fun onPlayerScreenHidden(canShowNotification: Boolean) {
+        isPlayerScreenVisible = false
+        canShowPlaybackNotification = canShowNotification
+        updateForegroundNotification()
+    }
+
+    fun onNotificationPermissionChanged(canShowNotification: Boolean) {
+        canShowPlaybackNotification = canShowNotification
+        updateForegroundNotification()
+    }
+
+    fun onPlayerScreenClosed() {
+        playbackServiceController?.stopPlayer()
+        playbackServiceController?.hideForegroundNotification()
+    }
+
     override fun onCleared() {
+        playerStateJob?.cancel()
+        playbackServiceController?.hideForegroundNotification()
         super.onCleared()
-        stopProgressUpdates()
-        playerInteractor.release()
     }
 
     private fun observeFavoriteState() {
@@ -129,93 +160,16 @@ class PlayerViewModel(
         }
     }
 
-    private fun preparePlayer() {
-        val track = _uiState.value?.track ?: return
-        val previewUrl = track.previewUrl
-
-        if (previewUrl.isNullOrBlank()) {
-            updateState {
-                copy(
-                    isPlayButtonEnabled = false,
-                    isPlaying = false,
-                    progress = PlayerUiState.START_PROGRESS
-                )
-            }
-            return
+    private fun updateForegroundNotification() {
+        val controller = playbackServiceController ?: return
+        if (!isPlayerScreenVisible &&
+            canShowPlaybackNotification &&
+            controller.getPlayerState().isPlaying
+        ) {
+            controller.showForegroundNotification()
+        } else {
+            controller.hideForegroundNotification()
         }
-
-        updateState {
-            copy(
-                isPlayButtonEnabled = false,
-                isPlaying = false,
-                progress = PlayerUiState.START_PROGRESS
-            )
-        }
-
-        playerInteractor.preparePlayer(
-            url = previewUrl,
-            onPrepared = {
-                playerState = PlayerState.PREPARED
-                updateState { copy(isPlayButtonEnabled = true) }
-            },
-            onCompletion = {
-                stopProgressUpdates()
-                playerState = PlayerState.PREPARED
-                updateState {
-                    copy(
-                        isPlaying = false,
-                        progress = PlayerUiState.START_PROGRESS
-                    )
-                }
-            },
-            onError = {
-                stopProgressUpdates()
-                playerState = PlayerState.DEFAULT
-                updateState {
-                    copy(
-                        isPlayButtonEnabled = false,
-                        isPlaying = false,
-                        progress = PlayerUiState.START_PROGRESS
-                    )
-                }
-            }
-        )
-    }
-
-    private fun startPlayer() {
-        playerInteractor.startPlayer()
-        playerState = PlayerState.PLAYING
-        updateState { copy(isPlaying = true) }
-        startProgressUpdates()
-    }
-
-    private fun pausePlayer() {
-        playerInteractor.pausePlayer()
-        playerState = PlayerState.PAUSED
-        stopProgressUpdates()
-        updateState {
-            copy(
-                isPlaying = false,
-                progress = formatTime(playerInteractor.getCurrentPosition())
-            )
-        }
-    }
-
-    private fun startProgressUpdates() {
-        stopProgressUpdates()
-        progressJob = viewModelScope.launch {
-            while (isActive && playerState == PlayerState.PLAYING) {
-                updateState {
-                    copy(progress = formatTime(playerInteractor.getCurrentPosition()))
-                }
-                delay(PROGRESS_DELAY)
-            }
-        }
-    }
-
-    private fun stopProgressUpdates() {
-        progressJob?.cancel()
-        progressJob = null
     }
 
     private fun updateState(update: PlayerUiState.() -> PlayerUiState) {
@@ -225,9 +179,5 @@ class PlayerViewModel(
 
     private fun formatTime(position: Int): String {
         return SimpleDateFormat("mm:ss", Locale.getDefault()).format(position.toLong())
-    }
-
-    private companion object {
-        private const val PROGRESS_DELAY = 300L
     }
 }
